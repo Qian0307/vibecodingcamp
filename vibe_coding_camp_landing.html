@@ -1,0 +1,390 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .page {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--color-text-primary);
+    max-width: 680px;
+    padding: 0 0 3rem;
+  }
+
+  .hero {
+    background: #0a0a0a;
+    border-radius: var(--border-radius-lg);
+    padding: 3rem 2rem 2.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: #7F77DD22;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: #1D9E7522;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: #7F77DD33;
+    color: #AFA9EC;
+    border: 0.5px solid #7F77DD55;
+    border-radius: 100px;
+    padding: 4px 12px;
+    margin-bottom: 1.2rem;
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #fff;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero h1 span {
+    color: #9FE1CB;
+  }
+
+  .hero-desc {
+    font-size: 15px;
+    color: #aaa;
+    line-height: 1.7;
+    max-width: 500px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .badge {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    border: 0.5px solid #333;
+    color: #ccc;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--color-text-primary);
+  }
+
+  .highlight-box {
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .outcome-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 2rem;
+  }
+
+  .outcome-card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .outcome-icon {
+    font-size: 22px;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: #7F77DD;
+  }
+
+  .outcome-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+  }
+
+  .schedule {
+    margin-bottom: 2rem;
+  }
+
+  .day-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0.8rem;
+    margin-top: 1.2rem;
+  }
+
+  .day-pill {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 100px;
+    letter-spacing: 0.05em;
+  }
+
+  .day1 { background: #EEEDFE; color: #3C3489; border: 0.5px solid #AFA9EC; }
+  .day2 { background: #E1F5EE; color: #085041; border: 0.5px solid #5DCAA5; }
+
+  .session-list {
+    list-style: none;
+    border-left: 1.5px solid var(--color-border-tertiary);
+    padding-left: 1rem;
+  }
+
+  .session-item {
+    padding: 0.6rem 0;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    font-size: 14px;
+  }
+
+  .session-item:last-child { border-bottom: none; }
+
+  .session-time {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    margin-bottom: 2px;
+    font-weight: 500;
+  }
+
+  .session-name {
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+
+  .session-desc {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 2rem;
+  }
+
+  .tool-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    padding: 0.75rem 1rem;
+  }
+
+  .tool-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-purple { background: #7F77DD; }
+  .dot-teal { background: #1D9E75; }
+  .dot-amber { background: #BA7517; }
+  .dot-blue { background: #378ADD; }
+
+  .tool-info { flex: 1; }
+  .tool-name { font-size: 13px; font-weight: 500; }
+  .tool-use { font-size: 11px; color: var(--color-text-secondary); }
+
+  .cta-block {
+    background: #0a0a0a;
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .cta-block h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+
+  .cta-block p {
+    font-size: 14px;
+    color: #aaa;
+    margin-bottom: 1.5rem;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    background: #9FE1CB;
+    color: #04342C;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 12px 28px;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+  }
+
+  .divider {
+    border: none;
+    border-top: 0.5px solid var(--color-border-tertiary);
+    margin: 1.5rem 0;
+  }
+</style>
+
+<div class="page">
+
+  <div class="hero">
+    <div class="tag">2天密集工作坊</div>
+    <h1>不會寫程式，<br>也能做出<span>自己的遊戲</span></h1>
+    <p class="hero-desc">用 AI 工具在兩天內完成一款遊戲、一支 Reel、一個上線作品集網站。帶著連結離開，不帶任何程式基礎。</p>
+    <div class="badges">
+      <span class="badge"><i class="ti ti-calendar" aria-hidden="true"></i> 2天 4堂課</span>
+      <span class="badge"><i class="ti ti-device-laptop" aria-hidden="true"></i> 線上進行</span>
+      <span class="badge"><i class="ti ti-users" aria-hidden="true"></i> 適合在校學生</span>
+      <span class="badge"><i class="ti ti-sparkles" aria-hidden="true"></i> 2種以上 AI 工具</span>
+    </div>
+  </div>
+
+  <p class="section-title">結業時你會帶走</p>
+  <div class="outcome-grid">
+    <div class="outcome-card">
+      <i class="ti ti-device-gamepad-2 outcome-icon" aria-hidden="true"></i>
+      <div class="outcome-label">一款用 AI 製作的遊戲</div>
+    </div>
+    <div class="outcome-card">
+      <i class="ti ti-video outcome-icon" style="color:#1D9E75" aria-hidden="true"></i>
+      <div class="outcome-label">遊戲 Reel 展示影片</div>
+    </div>
+    <div class="outcome-card">
+      <i class="ti ti-world outcome-icon" style="color:#BA7517" aria-hidden="true"></i>
+      <div class="outcome-label">作品集網站（真實上線）</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <p class="section-title">課程流程</p>
+  <div class="schedule">
+    <div class="day-header">
+      <span class="day-pill day1">Day 1</span>
+      <span style="font-size:13px; color:var(--color-text-secondary)">遊戲 × 影片</span>
+    </div>
+    <ul class="session-list">
+      <li class="session-item">
+        <div class="session-time">堂 1・上午</div>
+        <div class="session-name">AI 工具全覽 ＋ 遊戲製作實戰（第一種 AI）</div>
+        <div class="session-desc">工具環境設置、用 AI #1 生成遊戲雛形、學會寫出有效的 Prompt</div>
+      </li>
+      <li class="session-item">
+        <div class="session-time">堂 2・下午前段</div>
+        <div class="session-name">第二種 AI 工具 ＋ 遊戲完成發布</div>
+        <div class="session-desc">加入第二種 AI 強化遊戲內容、測試調整、取得遊戲公開連結</div>
+      </li>
+      <li class="session-item">
+        <div class="session-time">・下午後段</div>
+        <div class="session-name">遊戲錄影 ＋ Reel 剪輯教學</div>
+        <div class="session-desc">螢幕錄影技巧、剪輯節奏、AI 輔助影片製作、完成 Reel demo</div>
+      </li>
+    </ul>
+
+    <div class="day-header">
+      <span class="day-pill day2">Day 2</span>
+      <span style="font-size:13px; color:var(--color-text-secondary)">網站 × 上線</span>
+    </div>
+    <ul class="session-list">
+      <li class="session-item">
+        <div class="session-time">堂 3・上午</div>
+        <div class="session-name">Vibe Coding 網站製作</div>
+        <div class="session-desc">用自然語言讓 AI 寫出網站程式碼、嵌入遊戲連結與 Reel 影片</div>
+      </li>
+      <li class="session-item">
+        <div class="session-time">堂 4・下午前段</div>
+        <div class="session-name">遊戲介紹文案 ＋ 網站美化</div>
+        <div class="session-desc">用 AI 輔助寫 text wall、調整版面配色、讓網站有個人風格</div>
+      </li>
+      <li class="session-item">
+        <div class="session-time">・下午後段</div>
+        <div class="session-name">部署上線 ＋ Demo 展示</div>
+        <div class="session-desc">Netlify 一鍵部署、取得個人網站連結、每人展示成果</div>
+      </li>
+    </ul>
+  </div>
+
+  <hr class="divider">
+
+  <p class="section-title">會用到的工具</p>
+  <div class="tools-grid">
+    <div class="tool-item">
+      <div class="tool-dot dot-purple"></div>
+      <div class="tool-info">
+        <div class="tool-name">Rosebud AI / GDevelop</div>
+        <div class="tool-use">遊戲製作 AI #1</div>
+      </div>
+    </div>
+    <div class="tool-item">
+      <div class="tool-dot dot-teal"></div>
+      <div class="tool-info">
+        <div class="tool-name">Cursor / Claude</div>
+        <div class="tool-use">遊戲強化 ＋ 網站製作</div>
+      </div>
+    </div>
+    <div class="tool-item">
+      <div class="tool-dot dot-amber"></div>
+      <div class="tool-info">
+        <div class="tool-name">CapCut / Runway</div>
+        <div class="tool-use">Reel 影片剪輯</div>
+      </div>
+    </div>
+    <div class="tool-item">
+      <div class="tool-dot dot-blue"></div>
+      <div class="tool-info">
+        <div class="tool-name">Netlify</div>
+        <div class="tool-use">免費網站部署上線</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-block">
+    <h3>你的作品，兩天後上線</h3>
+    <p>不需要任何程式基礎。帶一台電腦，帶一個想法。</p>
+    <button class="cta-btn" onclick="sendPrompt('幫我產生報名表單文案')">立即報名 →</button>
+  </div>
+
+</div>
