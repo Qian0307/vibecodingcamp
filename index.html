@@ -5,21 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vibe Coding Camp｜2天做出遊戲＋網站</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #FFF8F0;
-      --surface: #FFF0E8;
-      --border: #F0E0D8;
-      --accent: #FF8FAB;
-      --accent-dark: #4a0020;
-      --text: #2D2D2D;
-      --muted: #999;
-      --heading-font: 'Nunito', sans-serif;
-      --body-font: 'Plus Jakarta Sans', sans-serif;
-/* Google Fonts: Nunito:wght@700;800;900 + Plus+Jakarta+Sans:wght@400;500 */
+      --bg: #0c0c0c;
+      --surface: #161616;
+      --surface2: #1e1e1e;
+      --border: #2a2a2a;
+      --text: #f0f0f0;
+      --muted: #888;
+      --accent: #9FE1CB;
+      --accent-dark: #04342C;
+      --purple: #AFA9EC;
+      --purple-bg: #1a1930;
+      --teal: #5DCAA5;
+      --teal-bg: #0d2620;
+      --amber: #EF9F27;
     }
 
     html { scroll-behavior: smooth; }
@@ -27,9 +30,9 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Noto Sans TC', sans-serif;
       font-size: 16px;
-      line-height: 1.7;
+      line-height: 1.8;
       min-height: 100vh;
     }
 
@@ -72,7 +75,7 @@
     }
 
     .nav-logo {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-weight: 800;
       font-size: 1rem;
       letter-spacing: 0.04em;
@@ -82,7 +85,7 @@
     .nav-cta {
       background: var(--accent);
       color: var(--accent-dark);
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-weight: 700;
       font-size: 13px;
       padding: 8px 20px;
@@ -144,7 +147,7 @@
     }
 
     h1 {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-size: clamp(2.4rem, 6vw, 3.8rem);
       font-weight: 800;
       line-height: 1.05;
@@ -215,7 +218,7 @@
     }
 
     .section-title {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-size: clamp(1.4rem, 3vw, 1.9rem);
       font-weight: 800;
       margin-bottom: 2.5rem;
@@ -294,7 +297,7 @@
     }
 
     .day-pill {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-size: 11px;
       font-weight: 800;
       letter-spacing: 0.08em;
@@ -381,7 +384,7 @@
     }
 
     .detail-title {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-size: 1rem;
       font-weight: 700;
     }
@@ -434,7 +437,7 @@
     }
 
     .cta-section h2 {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-size: clamp(1.8rem, 4vw, 2.8rem);
       font-weight: 800;
       line-height: 1.15;
@@ -457,7 +460,7 @@
     .btn-primary {
       background: var(--accent);
       color: var(--accent-dark);
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-weight: 800;
       font-size: 15px;
       padding: 16px 40px;
@@ -473,7 +476,7 @@
     .btn-secondary {
       background: transparent;
       color: var(--muted);
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-weight: 600;
       font-size: 15px;
       padding: 16px 32px;
@@ -514,9 +517,51 @@
       h1 { font-size: 2.2rem; }
       .step-desc { margin-left: 0; }
     }
+  <style>
+    .brand-bar {
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border);
+      padding: 10px 0;
+      text-align: center;
+    }
+    .brand-bar-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+    .brand-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+    }
+    .brand-name {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+    }
+    .brand-sub {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
   </style>
 </head>
 <body>
+
+  <div class="brand-bar">
+    <div class="brand-bar-inner">
+      <span class="brand-name">千日文理教育</span>
+      <div class="brand-divider"></div>
+      <span class="brand-sub">Vibe Coding Camp 特別企劃</span>
+    </div>
+  </div>
 
   <nav>
     <div class="inner">
@@ -624,29 +669,29 @@
         <div class="tool-card">
           <div class="tool-dot dot-purple"></div>
           <div>
-            <div class="tool-name">Rosebud AI / GDevelop</div>
+            <div class="tool-name">OpenAI Codex</div>
             <div class="tool-use">遊戲製作 — AI 工具 #1</div>
           </div>
         </div>
         <div class="tool-card">
           <div class="tool-dot dot-teal"></div>
           <div>
-            <div class="tool-name">Cursor / Claude</div>
+            <div class="tool-name">Claude</div>
             <div class="tool-use">遊戲強化 ＋ 網站 Vibe Coding</div>
           </div>
         </div>
         <div class="tool-card">
           <div class="tool-dot dot-amber"></div>
           <div>
-            <div class="tool-name">CapCut / Runway</div>
-            <div class="tool-use">Reel 影片剪輯</div>
+            <div class="tool-name">Cursor</div>
+            <div class="tool-use">AI 程式碼即時編輯環境</div>
           </div>
         </div>
         <div class="tool-card">
           <div class="tool-dot dot-blue"></div>
           <div>
-            <div class="tool-name">Netlify</div>
-            <div class="tool-use">免費網站部署上線</div>
+            <div class="tool-name">Gemini 1.5 Pro</div>
+            <div class="tool-use">圖像理解 ＋ 輔助設計發想</div>
           </div>
         </div>
       </div>
