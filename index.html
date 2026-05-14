@@ -1,390 +1,866 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vibe Coding Camp｜2天做出遊戲＋網站</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500&display=swap');
+    :root {
+      --bg: #0c0c0c;
+      --surface: #161616;
+      --surface2: #1e1e1e;
+      --border: #2a2a2a;
+      --text: #f0f0f0;
+      --muted: #888;
+      --accent: #9FE1CB;
+      --accent-dark: #04342C;
+      --purple: #AFA9EC;
+      --purple-bg: #1a1930;
+      --teal: #5DCAA5;
+      --teal-bg: #0d2620;
+      --amber: #EF9F27;
+    }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
 
-  .page {
-    font-family: 'DM Sans', sans-serif;
-    color: var(--color-text-primary);
-    max-width: 680px;
-    padding: 0 0 3rem;
-  }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
 
-  .hero {
-    background: #0a0a0a;
-    border-radius: var(--border-radius-lg);
-    padding: 3rem 2rem 2.5rem;
-    margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
-  }
+    /* NOISE TEXTURE OVERLAY */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
 
-  .hero::before {
-    content: '';
-    position: absolute;
-    top: -60px; right: -60px;
-    width: 220px; height: 220px;
-    border-radius: 50%;
-    background: #7F77DD22;
-  }
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
 
-  .hero::after {
-    content: '';
-    position: absolute;
-    bottom: -40px; left: 30px;
-    width: 140px; height: 140px;
-    border-radius: 50%;
-    background: #1D9E7522;
-  }
+    /* NAV */
+    nav {
+      padding: 1.5rem 0;
+      border-bottom: 0.5px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(12,12,12,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
 
-  .tag {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    background: #7F77DD33;
-    color: #AFA9EC;
-    border: 0.5px solid #7F77DD55;
-    border-radius: 100px;
-    padding: 4px 12px;
-    margin-bottom: 1.2rem;
-  }
+    nav .inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-  .hero h1 {
-    font-family: 'Syne', sans-serif;
-    font-size: 2.4rem;
-    font-weight: 800;
-    line-height: 1.1;
-    color: #fff;
-    margin-bottom: 1rem;
-    position: relative;
-    z-index: 1;
-  }
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+    }
 
-  .hero h1 span {
-    color: #9FE1CB;
-  }
+    .nav-cta {
+      background: var(--accent);
+      color: var(--accent-dark);
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 8px 20px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
 
-  .hero-desc {
-    font-size: 15px;
-    color: #aaa;
-    line-height: 1.7;
-    max-width: 500px;
-    position: relative;
-    z-index: 1;
-  }
+    .nav-cta:hover { opacity: 0.85; }
 
-  .badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 1.5rem;
-    position: relative;
-    z-index: 1;
-  }
+    /* HERO */
+    .hero {
+      padding: 7rem 0 5rem;
+      text-align: center;
+      position: relative;
+    }
 
-  .badge {
-    font-size: 12px;
-    padding: 5px 12px;
-    border-radius: 100px;
-    border: 0.5px solid #333;
-    color: #ccc;
-  }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 300px;
+      background: radial-gradient(ellipse, #7F77DD18 0%, transparent 70%);
+      pointer-events: none;
+    }
 
-  .section-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: var(--color-text-primary);
-  }
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 0.5px solid #3DCCA055;
+      background: #9FE1CB0f;
+      border-radius: 100px;
+      padding: 5px 16px;
+      margin-bottom: 2rem;
+    }
 
-  .highlight-box {
-    background: var(--color-background-secondary);
-    border: 0.5px solid var(--color-border-tertiary);
-    border-radius: var(--border-radius-lg);
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-  }
+    .hero-tag::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
 
-  .outcome-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 2rem;
-  }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
 
-  .outcome-card {
-    background: var(--color-background-primary);
-    border: 0.5px solid var(--color-border-tertiary);
-    border-radius: var(--border-radius-lg);
-    padding: 1rem;
-    text-align: center;
-  }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+    }
 
-  .outcome-icon {
-    font-size: 22px;
-    margin-bottom: 0.5rem;
-    display: block;
-    color: #7F77DD;
-  }
+    h1 .accent { color: var(--accent); }
+    h1 .dim { color: var(--muted); }
 
-  .outcome-label {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--color-text-secondary);
-    line-height: 1.4;
-  }
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.75;
+    }
 
-  .schedule {
-    margin-bottom: 2rem;
-  }
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 3rem;
+    }
 
-  .day-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 0.8rem;
-    margin-top: 1.2rem;
-  }
+    .badge {
+      font-size: 12px;
+      padding: 5px 14px;
+      border-radius: 100px;
+      border: 0.5px solid var(--border);
+      color: var(--muted);
+      background: var(--surface);
+    }
 
-  .day-pill {
-    font-family: 'Syne', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 4px 14px;
-    border-radius: 100px;
-    letter-spacing: 0.05em;
-  }
+    .hero-cta {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--accent-dark);
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 16px 40px;
+      border-radius: 100px;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 40px #9FE1CB25;
+    }
 
-  .day1 { background: #EEEDFE; color: #3C3489; border: 0.5px solid #AFA9EC; }
-  .day2 { background: #E1F5EE; color: #085041; border: 0.5px solid #5DCAA5; }
+    .hero-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 60px #9FE1CB40;
+    }
 
-  .session-list {
-    list-style: none;
-    border-left: 1.5px solid var(--color-border-tertiary);
-    padding-left: 1rem;
-  }
+    /* OUTCOMES */
+    .section {
+      padding: 5rem 0;
+      border-top: 0.5px solid var(--border);
+    }
 
-  .session-item {
-    padding: 0.6rem 0;
-    border-bottom: 0.5px solid var(--color-border-tertiary);
-    font-size: 14px;
-  }
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
 
-  .session-item:last-child { border-bottom: none; }
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.4rem, 3vw, 1.9rem);
+      font-weight: 800;
+      margin-bottom: 2.5rem;
+      line-height: 1.2;
+    }
 
-  .session-time {
-    font-size: 11px;
-    color: var(--color-text-secondary);
-    margin-bottom: 2px;
-    font-weight: 500;
-  }
+    .outcomes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
 
-  .session-name {
-    font-weight: 500;
-    color: var(--color-text-primary);
-  }
+    .outcome-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
 
-  .session-desc {
-    font-size: 12px;
-    color: var(--color-text-secondary);
-    margin-top: 2px;
-  }
+    .outcome-card:hover { border-color: #444; }
 
-  .tools-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    margin-bottom: 2rem;
-  }
+    .outcome-card::after {
+      content: attr(data-num);
+      position: absolute;
+      top: -10px;
+      right: 12px;
+      font-family: 'Syne', sans-serif;
+      font-size: 5rem;
+      font-weight: 800;
+      color: #ffffff06;
+      line-height: 1;
+      pointer-events: none;
+    }
 
-  .tool-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--color-background-primary);
-    border: 0.5px solid var(--color-border-tertiary);
-    border-radius: var(--border-radius-md);
-    padding: 0.75rem 1rem;
-  }
+    .outcome-icon {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
 
-  .tool-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
+    .outcome-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
 
-  .dot-purple { background: #7F77DD; }
-  .dot-teal { background: #1D9E75; }
-  .dot-amber { background: #BA7517; }
-  .dot-blue { background: #378ADD; }
+    .outcome-card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
 
-  .tool-info { flex: 1; }
-  .tool-name { font-size: 13px; font-weight: 500; }
-  .tool-use { font-size: 11px; color: var(--color-text-secondary); }
+    /* SCHEDULE */
+    .schedule-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
 
-  .cta-block {
-    background: #0a0a0a;
-    border-radius: var(--border-radius-lg);
-    padding: 2rem;
-    text-align: center;
-  }
+    .day-block {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
 
-  .cta-block h3 {
-    font-family: 'Syne', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: #fff;
-    margin-bottom: 0.5rem;
-  }
+    .day-header {
+      padding: 1.2rem 1.5rem;
+      border-bottom: 0.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-  .cta-block p {
-    font-size: 14px;
-    color: #aaa;
-    margin-bottom: 1.5rem;
-  }
+    .day-pill {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      padding: 4px 12px;
+      border-radius: 100px;
+    }
 
-  .cta-btn {
-    display: inline-block;
-    background: #9FE1CB;
-    color: #04342C;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    padding: 12px 28px;
-    border-radius: 100px;
-    border: none;
-    cursor: pointer;
-    letter-spacing: 0.03em;
-  }
+    .day1 { background: var(--purple-bg); color: var(--purple); border: 0.5px solid #AFA9EC44; }
+    .day2 { background: var(--teal-bg); color: var(--teal); border: 0.5px solid #5DCAA544; }
 
-  .divider {
-    border: none;
-    border-top: 0.5px solid var(--color-border-tertiary);
-    margin: 1.5rem 0;
-  }
-</style>
+    .day-subtitle { font-size: 13px; color: var(--muted); }
 
-<div class="page">
+    .session {
+      padding: 1.2rem 1.5rem;
+      border-bottom: 0.5px solid var(--border);
+    }
 
-  <div class="hero">
-    <div class="tag">2天密集工作坊</div>
-    <h1>不會寫程式，<br>也能做出<span>自己的遊戲</span></h1>
-    <p class="hero-desc">用 AI 工具在兩天內完成一款遊戲、一支 Reel、一個上線作品集網站。帶著連結離開，不帶任何程式基礎。</p>
-    <div class="badges">
-      <span class="badge"><i class="ti ti-calendar" aria-hidden="true"></i> 2天 4堂課</span>
-      <span class="badge"><i class="ti ti-device-laptop" aria-hidden="true"></i> 線上進行</span>
-      <span class="badge"><i class="ti ti-users" aria-hidden="true"></i> 適合在校學生</span>
-      <span class="badge"><i class="ti ti-sparkles" aria-hidden="true"></i> 2種以上 AI 工具</span>
+    .session:last-child { border-bottom: none; }
+
+    .session-time {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .session-name {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .session-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* TOOLS */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .tool-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .tool-card:hover { border-color: #444; }
+
+    .tool-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-purple { background: #7F77DD; box-shadow: 0 0 8px #7F77DD66; }
+    .dot-teal   { background: #1D9E75; box-shadow: 0 0 8px #1D9E7566; }
+    .dot-amber  { background: #EF9F27; box-shadow: 0 0 8px #EF9F2766; }
+    .dot-blue   { background: #378ADD; box-shadow: 0 0 8px #378ADD66; }
+
+    .tool-name { font-size: 14px; font-weight: 500; }
+    .tool-use  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* DETAIL SCHEDULE */
+    .detail-block {
+      margin-bottom: 2.5rem;
+    }
+
+    .detail-day-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .detail-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .step-list {
+      list-style: none;
+      border-left: 1.5px solid var(--border);
+      padding-left: 1.5rem;
+    }
+
+    .step-item {
+      padding: 0.8rem 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .step-item:last-child { border-bottom: none; }
+
+    .step-header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .step-time {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 500;
+      min-width: 60px;
+      flex-shrink: 0;
+    }
+
+    .step-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .step-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: 70px;
+      line-height: 1.55;
+    }
+
+    /* CTA */
+    .cta-section {
+      padding: 5rem 0;
+      text-align: center;
+      border-top: 0.5px solid var(--border);
+    }
+
+    .cta-section h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+
+    .cta-section p {
+      color: var(--muted);
+      font-size: 15px;
+      margin-bottom: 2.5rem;
+    }
+
+    .cta-group {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-dark);
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 16px 40px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s;
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 16px 32px;
+      border-radius: 100px;
+      border: 0.5px solid var(--border);
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-secondary:hover { border-color: #555; color: var(--text); }
+
+    /* FOOTER */
+    footer {
+      padding: 2rem 0;
+      border-top: 0.5px solid var(--border);
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* FADE IN */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade { animation: fadeUp 0.6s ease both; }
+    .fade-1 { animation-delay: 0.1s; }
+    .fade-2 { animation-delay: 0.2s; }
+    .fade-3 { animation-delay: 0.35s; }
+    .fade-4 { animation-delay: 0.5s; }
+
+    @media (max-width: 640px) {
+      .outcomes-grid { grid-template-columns: 1fr; }
+      .schedule-wrapper { grid-template-columns: 1fr; }
+      .tools-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 2.2rem; }
+      .step-desc { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="inner">
+      <div class="nav-logo">VIBE CODING CAMP</div>
+      <a href="#signup" class="nav-cta">立即報名</a>
     </div>
-  </div>
+  </nav>
 
-  <p class="section-title">結業時你會帶走</p>
-  <div class="outcome-grid">
-    <div class="outcome-card">
-      <i class="ti ti-device-gamepad-2 outcome-icon" aria-hidden="true"></i>
-      <div class="outcome-label">一款用 AI 製作的遊戲</div>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-tag fade fade-1">2天密集工作坊・線上進行</div>
+      <h1 class="fade fade-2">
+        不會寫程式，<br>
+        <span class="accent">也能做出</span><br>
+        <span class="dim">自己的遊戲</span>
+      </h1>
+      <p class="hero-sub fade fade-3">
+        用 AI 工具在兩天內完成一款遊戲、一支 Reel、一個真實上線的作品集網站。帶著連結離開，不需要任何程式基礎。
+      </p>
+      <div class="hero-badges fade fade-3">
+        <span class="badge">📅 2天 4堂課</span>
+        <span class="badge">💻 線上進行</span>
+        <span class="badge">🎓 適合在校學生</span>
+        <span class="badge">✨ 使用 2種以上 AI 工具</span>
+        <span class="badge">🌐 成品真實上線</span>
+      </div>
+      <a href="#signup" class="hero-cta fade fade-4">立即報名 →</a>
     </div>
-    <div class="outcome-card">
-      <i class="ti ti-video outcome-icon" style="color:#1D9E75" aria-hidden="true"></i>
-      <div class="outcome-label">遊戲 Reel 展示影片</div>
-    </div>
-    <div class="outcome-card">
-      <i class="ti ti-world outcome-icon" style="color:#BA7517" aria-hidden="true"></i>
-      <div class="outcome-label">作品集網站（真實上線）</div>
-    </div>
-  </div>
+  </section>
 
-  <hr class="divider">
-
-  <p class="section-title">課程流程</p>
-  <div class="schedule">
-    <div class="day-header">
-      <span class="day-pill day1">Day 1</span>
-      <span style="font-size:13px; color:var(--color-text-secondary)">遊戲 × 影片</span>
-    </div>
-    <ul class="session-list">
-      <li class="session-item">
-        <div class="session-time">堂 1・上午</div>
-        <div class="session-name">AI 工具全覽 ＋ 遊戲製作實戰（第一種 AI）</div>
-        <div class="session-desc">工具環境設置、用 AI #1 生成遊戲雛形、學會寫出有效的 Prompt</div>
-      </li>
-      <li class="session-item">
-        <div class="session-time">堂 2・下午前段</div>
-        <div class="session-name">第二種 AI 工具 ＋ 遊戲完成發布</div>
-        <div class="session-desc">加入第二種 AI 強化遊戲內容、測試調整、取得遊戲公開連結</div>
-      </li>
-      <li class="session-item">
-        <div class="session-time">・下午後段</div>
-        <div class="session-name">遊戲錄影 ＋ Reel 剪輯教學</div>
-        <div class="session-desc">螢幕錄影技巧、剪輯節奏、AI 輔助影片製作、完成 Reel demo</div>
-      </li>
-    </ul>
-
-    <div class="day-header">
-      <span class="day-pill day2">Day 2</span>
-      <span style="font-size:13px; color:var(--color-text-secondary)">網站 × 上線</span>
-    </div>
-    <ul class="session-list">
-      <li class="session-item">
-        <div class="session-time">堂 3・上午</div>
-        <div class="session-name">Vibe Coding 網站製作</div>
-        <div class="session-desc">用自然語言讓 AI 寫出網站程式碼、嵌入遊戲連結與 Reel 影片</div>
-      </li>
-      <li class="session-item">
-        <div class="session-time">堂 4・下午前段</div>
-        <div class="session-name">遊戲介紹文案 ＋ 網站美化</div>
-        <div class="session-desc">用 AI 輔助寫 text wall、調整版面配色、讓網站有個人風格</div>
-      </li>
-      <li class="session-item">
-        <div class="session-time">・下午後段</div>
-        <div class="session-name">部署上線 ＋ Demo 展示</div>
-        <div class="session-desc">Netlify 一鍵部署、取得個人網站連結、每人展示成果</div>
-      </li>
-    </ul>
-  </div>
-
-  <hr class="divider">
-
-  <p class="section-title">會用到的工具</p>
-  <div class="tools-grid">
-    <div class="tool-item">
-      <div class="tool-dot dot-purple"></div>
-      <div class="tool-info">
-        <div class="tool-name">Rosebud AI / GDevelop</div>
-        <div class="tool-use">遊戲製作 AI #1</div>
+  <!-- OUTCOMES -->
+  <section class="section">
+    <div class="container">
+      <div class="section-label">你會帶走什麼</div>
+      <h2 class="section-title">結業時，三個真實成品</h2>
+      <div class="outcomes-grid">
+        <div class="outcome-card" data-num="01">
+          <div class="outcome-icon">🎮</div>
+          <h3>AI 製作的遊戲</h3>
+          <p>用兩種以上的 AI 工具製作，有公開連結、可以分享給任何人玩</p>
+        </div>
+        <div class="outcome-card" data-num="02">
+          <div class="outcome-icon">🎬</div>
+          <h3>遊戲 Reel 影片</h3>
+          <p>30-60 秒的遊戲展示影片，剪輯完成可直接發 Instagram / TikTok</p>
+        </div>
+        <div class="outcome-card" data-num="03">
+          <div class="outcome-icon">🌐</div>
+          <h3>作品集網站</h3>
+          <p>包含遊戲連結、Reel 影片、遊戲介紹的個人作品頁面，真實部署上線</p>
+        </div>
       </div>
     </div>
-    <div class="tool-item">
-      <div class="tool-dot dot-teal"></div>
-      <div class="tool-info">
-        <div class="tool-name">Cursor / Claude</div>
-        <div class="tool-use">遊戲強化 ＋ 網站製作</div>
-      </div>
-    </div>
-    <div class="tool-item">
-      <div class="tool-dot dot-amber"></div>
-      <div class="tool-info">
-        <div class="tool-name">CapCut / Runway</div>
-        <div class="tool-use">Reel 影片剪輯</div>
-      </div>
-    </div>
-    <div class="tool-item">
-      <div class="tool-dot dot-blue"></div>
-      <div class="tool-info">
-        <div class="tool-name">Netlify</div>
-        <div class="tool-use">免費網站部署上線</div>
-      </div>
-    </div>
-  </div>
+  </section>
 
-  <div class="cta-block">
-    <h3>你的作品，兩天後上線</h3>
-    <p>不需要任何程式基礎。帶一台電腦，帶一個想法。</p>
-    <button class="cta-btn" onclick="sendPrompt('幫我產生報名表單文案')">立即報名 →</button>
-  </div>
+  <!-- SCHEDULE OVERVIEW -->
+  <section class="section">
+    <div class="container">
+      <div class="section-label">課程安排</div>
+      <h2 class="section-title">兩天，四堂課</h2>
+      <div class="schedule-wrapper">
+        <div class="day-block">
+          <div class="day-header">
+            <span class="day-pill day1">DAY 1</span>
+            <span class="day-subtitle">遊戲 × 影片</span>
+          </div>
+          <div class="session">
+            <div class="session-time">堂 1・上午</div>
+            <div class="session-name">AI 工具全覽 ＋ 遊戲製作實戰</div>
+            <div class="session-desc">工具設置、Prompt 技巧、用第一種 AI 生成遊戲雛形</div>
+          </div>
+          <div class="session">
+            <div class="session-time">堂 2・下午</div>
+            <div class="session-name">第二種 AI ＋ 遊戲完成 ＋ Reel 製作</div>
+            <div class="session-desc">發布遊戲取得連結、錄影剪輯教學、完成 Reel demo</div>
+          </div>
+        </div>
+        <div class="day-block">
+          <div class="day-header">
+            <span class="day-pill day2">DAY 2</span>
+            <span class="day-subtitle">網站 × 上線</span>
+          </div>
+          <div class="session">
+            <div class="session-time">堂 3・上午</div>
+            <div class="session-name">Vibe Coding 網站製作</div>
+            <div class="session-desc">用自然語言讓 AI 寫網站、嵌入遊戲連結與影片</div>
+          </div>
+          <div class="session">
+            <div class="session-time">堂 4・下午</div>
+            <div class="session-name">文案 ＋ 美化 ＋ 部署上線 ＋ Demo 展示</div>
+            <div class="session-desc">AI 輔助寫介紹文、網站美化、Netlify 部署、成果發表</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-</div>
+  <!-- TOOLS -->
+  <section class="section">
+    <div class="container">
+      <div class="section-label">工具清單</div>
+      <h2 class="section-title">課程會用到的 AI 工具</h2>
+      <div class="tools-grid">
+        <div class="tool-card">
+          <div class="tool-dot dot-purple"></div>
+          <div>
+            <div class="tool-name">Rosebud AI / GDevelop</div>
+            <div class="tool-use">遊戲製作 — AI 工具 #1</div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-dot dot-teal"></div>
+          <div>
+            <div class="tool-name">Cursor / Claude</div>
+            <div class="tool-use">遊戲強化 ＋ 網站 Vibe Coding</div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-dot dot-amber"></div>
+          <div>
+            <div class="tool-name">CapCut / Runway</div>
+            <div class="tool-use">Reel 影片剪輯</div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-dot dot-blue"></div>
+          <div>
+            <div class="tool-name">Netlify</div>
+            <div class="tool-use">免費網站部署上線</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DETAILED SCHEDULE -->
+  <section class="section">
+    <div class="container">
+      <div class="section-label">詳細教學流程</div>
+      <h2 class="section-title">每堂課你會做什麼</h2>
+
+      <!-- Day 1 Sess 1 -->
+      <div class="detail-block">
+        <div class="detail-day-header">
+          <span class="day-pill day1">DAY 1・堂 1</span>
+          <span class="detail-title">AI 工具全覽 ＋ 遊戲製作實戰（約 2.5 小時）</span>
+        </div>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">15 min</span>
+              <span class="step-name">開場與 Vibe Coding 概念</span>
+            </div>
+            <p class="step-desc">什麼是 vibe coding？AI 輔助創作的思維與正確期待</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">20 min</span>
+              <span class="step-name">工具環境設置</span>
+            </div>
+            <p class="step-desc">帳號申請、介面導覽、確保每個人都準備好</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">30 min</span>
+              <span class="step-name">Prompt 技巧核心課</span>
+            </div>
+            <p class="step-desc">怎麼跟 AI 說清楚你要什麼，壞 prompt vs 好 prompt 對比示範</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">60 min</span>
+              <span class="step-name">遊戲製作實作</span>
+            </div>
+            <p class="step-desc">用第一種 AI 工具從零生成遊戲雛形，老師示範後學生跟做</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">15 min</span>
+              <span class="step-name">Q&amp;A ＋ 課後作業</span>
+            </div>
+            <p class="step-desc">想好自己遊戲的主題，截圖存好雛形</p>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Day 1 Sess 2 -->
+      <div class="detail-block">
+        <div class="detail-day-header">
+          <span class="day-pill day1">DAY 1・堂 2</span>
+          <span class="detail-title">第二種 AI ＋ 完成遊戲 ＋ Reel 製作（約 3 小時）</span>
+        </div>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">15 min</span>
+              <span class="step-name">複習與學生展示</span>
+            </div>
+            <p class="step-desc">每人分享昨天的遊戲雛形進度</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">40 min</span>
+              <span class="step-name">AI 工具 #2 介紹與操作</span>
+            </div>
+            <p class="step-desc">第二種工具的特性、如何與第一種搭配使用強化遊戲</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">45 min</span>
+              <span class="step-name">遊戲完成與發布</span>
+            </div>
+            <p class="step-desc">測試調整、用 AI 修 bug、取得遊戲公開連結</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">20 min</span>
+              <span class="step-name">錄影教學</span>
+            </div>
+            <p class="step-desc">螢幕錄影工具設定、掌握鏡頭節奏技巧</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">40 min</span>
+              <span class="step-name">Reel 剪輯實作</span>
+            </div>
+            <p class="step-desc">CapCut 操作或 AI 影片工具，剪出 30-60 秒的 demo 影片</p>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Day 2 Sess 3 -->
+      <div class="detail-block">
+        <div class="detail-day-header">
+          <span class="day-pill day2">DAY 2・堂 3</span>
+          <span class="detail-title">Vibe Coding 網站製作（約 2.5 小時）</span>
+        </div>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">15 min</span>
+              <span class="step-name">網站結構說明</span>
+            </div>
+            <p class="step-desc">介紹最終作品集頁面的三區塊：遊戲連結、Reel 影片、遊戲介紹</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">20 min</span>
+              <span class="step-name">從模板開始</span>
+            </div>
+            <p class="step-desc">發放起始模板，不從空白開始，降低挫折感</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">60 min</span>
+              <span class="step-name">Vibe Coding 實作</span>
+            </div>
+            <p class="step-desc">用自然語言指令讓 AI 改版面、嵌入遊戲連結與 Reel 影片</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">20 min</span>
+              <span class="step-name">常見問題排除</span>
+            </div>
+            <p class="step-desc">看不懂程式碼也能修的方法：請 AI 解釋 → 再請 AI 修</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">15 min</span>
+              <span class="step-name">老師巡堂協助</span>
+            </div>
+            <p class="step-desc">個人進度調整，處理卡關問題</p>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Day 2 Sess 4 -->
+      <div class="detail-block">
+        <div class="detail-day-header">
+          <span class="day-pill day2">DAY 2・堂 4</span>
+          <span class="detail-title">文案 ＋ 美化 ＋ 上線 ＋ Demo 展示（約 3 小時）</span>
+        </div>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">30 min</span>
+              <span class="step-name">Text Wall 撰寫</span>
+            </div>
+            <p class="step-desc">用 AI 輔助生成遊戲介紹，學生只需填入關鍵字即可產出完整文案</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">40 min</span>
+              <span class="step-name">網站美化</span>
+            </div>
+            <p class="step-desc">顏色、字體、排版調整，讓網站有個人風格</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">30 min</span>
+              <span class="step-name">Netlify 部署上線</span>
+            </div>
+            <p class="step-desc">一鍵部署流程教學，取得個人網站的真實公開連結</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">30 min</span>
+              <span class="step-name">最終調整時間</span>
+            </div>
+            <p class="step-desc">自由優化，老師協助收尾所有未完成的部分</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-time">30 min</span>
+              <span class="step-name">Demo 展示發表</span>
+            </div>
+            <p class="step-desc">每人 2-3 分鐘展示遊戲 ＋ 網站，互相給予回饋，拍照留念</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="signup">
+    <div class="container">
+      <h2>你的作品，<span style="color:var(--accent)">兩天後上線</span></h2>
+      <p>不需要任何程式基礎。帶一台電腦，帶一個 idea。</p>
+      <div class="cta-group">
+        <a href="#" class="btn-primary">立即報名 →</a>
+        <a href="#" class="btn-secondary">了解更多</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>Vibe Coding Camp &nbsp;·&nbsp; 兩天做出你的第一個遊戲</p>
+    </div>
+  </footer>
+
+</body>
+</html>
