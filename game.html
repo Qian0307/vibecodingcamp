@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚀 Space Shooter — 我的第一款 AI 遊戲</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════
+   🎨 可以改這裡：遊戲顏色設定
+   ══════════════════════════════════════════════════ */
+:root {
+  --bg:          #000010;      /* 背景色 */
+  --player-col:  #00FFB2;      /* 玩家顏色 */
+  --bullet-col:  #FFFFFF;      /* 子彈顏色 */
+  --enemy-col:   #FF4466;      /* 敵人顏色 */
+  --bomb-col:    #FFB800;      /* 炸彈顏色 */
+  --ui-col:      #00FFB2;      /* UI 文字顏色 */
+  --font:        'JetBrains Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: var(--font);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── HEADER ── */
+.game-header {
+  width: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0 8px;
+}
+.game-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ui-col);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.badge {
+  font-size: 10px;
+  padding: 3px 10px;
+  border: 1px solid var(--ui-col);
+  border-radius: 100px;
+  color: var(--ui-col);
+  opacity: 0.5;
+  letter-spacing: 0.1em;
+}
+
+/* ── CANVAS WRAPPER ── */
+.canvas-wrap {
+  position: relative;
+  border: 1px solid rgba(0,255,178,0.15);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(0,255,178,0.08), 0 0 120px rgba(0,255,178,0.04);
+}
+#gameCanvas { display: block; }
+
+/* ── HUD OVERLAY ── */
+.hud {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 14px 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.hud-left, .hud-right { display: flex; flex-direction: column; gap: 4px; }
+.hud-item { font-size: 11px; color: rgba(0,255,178,0.6); letter-spacing: 0.1em; }
+.hud-val { font-size: 20px; font-weight: 800; color: var(--ui-col); letter-spacing: 0.05em; line-height: 1.1; }
+.hud-right { align-items: flex-end; }
+
+/* ── LIVES ── */
+.lives-row { display: flex; gap: 6px; }
+.life-icon { font-size: 14px; }
+
+/* ── OVERLAY SCREENS ── */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,16,0.92);
+  backdrop-filter: blur(4px);
+  gap: 16px;
+  transition: opacity 0.4s;
+}
+.screen.hidden { opacity: 0; pointer-events: none; }
+
+.screen-title {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--ui-col);
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-shadow: 0 0 30px var(--ui-col);
+}
+.screen-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.15em;
+  text-align: center;
+}
+.screen-score {
+  font-size: 48px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 0 20px var(--ui-col);
+}
+.screen-score-label {
+  font-size: 11px;
+  color: rgba(0,255,178,0.5);
+  letter-spacing: 0.2em;
+  margin-top: -8px;
+}
+
+.btn-start {
+  margin-top: 8px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 14px 40px;
+  background: var(--ui-col);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 0 30px rgba(0,255,178,0.3);
+}
+.btn-start:hover { transform: translateY(-2px); box-shadow: 0 0 50px rgba(0,255,178,0.5); }
+.btn-start:active { transform: translateY(0); }
+
+.controls-hint {
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 0.12em;
+  text-align: center;
+  line-height: 2;
+}
+
+/* ── BOTTOM BAR ── */
+.game-footer {
+  width: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 10px;
+}
+.footer-hint {
+  font-size: 10px;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.12em;
+}
+.footer-credit {
+  font-size: 10px;
+  color: rgba(0,255,178,0.3);
+  letter-spacing: 0.1em;
+}
+
+/* ── BOMB INDICATOR ── */
+.bomb-bar {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.bomb-pip {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--bomb-col);
+  box-shadow: 0 0 6px var(--bomb-col);
+  transition: opacity 0.2s;
+}
+.bomb-pip.used { opacity: 0.15; }
+
+/* ── LEVEL FLASH ── */
+.level-flash {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.level-flash.show { opacity: 1; }
+.level-flash-text {
+  font-size: 48px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.2em;
+  text-shadow: 0 0 40px var(--ui-col);
+}
+</style>
+</head>
+<body>
+
+<div class="game-header">
+  <span class="game-title">🚀 Space Shooter</span>
+  <span class="badge">Vibe Coding Camp × 千日</span>
+</div>
+
+<div class="canvas-wrap">
+  <canvas id="gameCanvas" width="600" height="500"></canvas>
+
+  <div class="hud">
+    <div class="hud-left">
+      <div class="hud-item">SCORE</div>
+      <div class="hud-val" id="hud-score">0</div>
+      <div class="hud-item" style="margin-top:6px">LEVEL</div>
+      <div class="hud-val" id="hud-level">1</div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-item">LIVES</div>
+      <div class="lives-row" id="hud-lives"></div>
+      <div class="hud-item" style="margin-top:6px">BOMBS</div>
+      <div class="bomb-bar" id="hud-bombs"></div>
+    </div>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="screen" id="screen-start">
+    <div class="screen-title">SPACE<br>SHOOTER</div>
+    <div class="screen-sub">千日文理教育 × Vibe Coding Camp</div>
+    <button class="btn-start" id="btn-start">▶ START GAME</button>
+    <div class="controls-hint">
+      ← → 移動　　SPACE 射擊　　X 炸彈<br>
+      手機：點擊左右移動，點擊中間射擊
+    </div>
+  </div>
+
+  <!-- GAME OVER SCREEN -->
+  <div class="screen hidden" id="screen-over">
+    <div class="screen-title" style="color:#FF4466;text-shadow:0 0 30px #FF4466">GAME<br>OVER</div>
+    <div class="screen-score" id="final-score">0</div>
+    <div class="screen-score-label">FINAL SCORE</div>
+    <button class="btn-start" id="btn-restart">↺ PLAY AGAIN</button>
+  </div>
+
+  <!-- CLEAR SCREEN -->
+  <div class="screen hidden" id="screen-clear">
+    <div class="screen-title" style="color:#FFD166;text-shadow:0 0 30px #FFD166">YOU<br>WIN!</div>
+    <div class="screen-score" id="clear-score">0</div>
+    <div class="screen-score-label">FINAL SCORE</div>
+    <button class="btn-start" id="btn-next" style="background:#FFD166">▶ NEXT LEVEL</button>
+  </div>
+
+  <div class="level-flash" id="level-flash">
+    <div class="level-flash-text" id="level-flash-text">LEVEL 1</div>
+  </div>
+</div>
+
+<div class="game-footer">
+  <span class="footer-hint">← → MOVE &nbsp;·&nbsp; SPACE SHOOT &nbsp;·&nbsp; X BOMB</span>
+  <span class="footer-credit">made with AI × 千日文理教育</span>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   🎮 遊戲設定 — AI 可以幫你改這些數字！
+   ══════════════════════════════════════════════════ */
+const CONFIG = {
+  /* 玩家設定 */
+  PLAYER_SPEED:   5,        // 玩家移動速度（數字越大越快）
+  PLAYER_LIVES:   3,        // 起始生命數
+  PLAYER_BOMBS:   3,        // 起始炸彈數
+  SHOOT_COOLDOWN: 12,       // 射擊冷卻（幀數，越小越快）
+  BULLET_SPEED:   10,       // 子彈速度
+  BULLET_DAMAGE:  1,        // 子彈傷害
+
+  /* 敵人設定 */
+  ENEMY_ROWS:     3,        // 敵人行數
+  ENEMY_COLS:     8,        // 敵人列數
+  ENEMY_HP:       1,        // 敵人血量
+  ENEMY_SPEED_X:  0.8,      // 敵人橫向速度
+  ENEMY_DROP_Y:   18,       // 敵人每次下移距離
+  ENEMY_SHOOT_CHANCE: 0.003,// 敵人每幀射擊機率
+
+  /* 分數設定 */
+  SCORE_PER_KILL: 10,       // 擊殺得分
+  SCORE_BOMB:     50,       // 炸彈清場獎勵
+
+  /* 特效設定 */
+  STAR_COUNT:     80,       // 背景星星數量
+  SHAKE_FRAMES:   8,        // 受傷震動幀數
+
+  /* 可愛說話功能（可以改這些台詞！）*/
+  KILL_MESSAGES:  ['Nice!', 'Got it!', '擊落！', 'Yeah!', '太厲害了！'],
+  LEVEL_MESSAGES: ['Level Up!', '下一關！', 'Keep Going!'],
+};
+
+/* ══════════════════════════════════════════════════
+   遊戲核心（不需要改這裡，讓 AI 幫你解釋）
+   ══════════════════════════════════════════════════ */
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');
+const W = 600, H = 500;
+
+// CSS 顏色讀取
+const cs = getComputedStyle(document.documentElement);
+const C = {
+  bg:     cs.getPropertyValue('--bg').trim(),
+  player: cs.getPropertyValue('--player-col').trim(),
+  bullet: cs.getPropertyValue('--bullet-col').trim(),
+  enemy:  cs.getPropertyValue('--enemy-col').trim(),
+  bomb:   cs.getPropertyValue('--bomb-col').trim(),
+  ui:     cs.getPropertyValue('--ui-col').trim(),
+};
+
+// ── STATE ──────────────────────────────────────
+let state = 'start';
+let score = 0, level = 1;
+let shakeTick = 0;
+let msgText = '', msgTick = 0;
+
+// ── STARS ──────────────────────────────────────
+const stars = Array.from({length: CONFIG.STAR_COUNT}, () => ({
+  x: Math.random() * W,
+  y: Math.random() * H,
+  r: Math.random() * 1.5 + 0.3,
+  speed: Math.random() * 0.5 + 0.1,
+  alpha: Math.random() * 0.7 + 0.2
+}));
+
+// ── PLAYER ─────────────────────────────────────
+const player = {
+  x: W / 2, y: H - 60,
+  w: 28, h: 28,
+  vx: 0,
+  lives: CONFIG.PLAYER_LIVES,
+  bombs: CONFIG.PLAYER_BOMBS,
+  shootCool: 0,
+  invincible: 0,
+  trail: []
+};
+
+// ── GAME OBJECTS ───────────────────────────────
+let bullets = [], enemyBullets = [], enemies = [], particles = [];
+let enemyDir = 1;
+
+// ── INPUT ──────────────────────────────────────
+const keys = {};
+window.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (e.code === 'Space') { e.preventDefault(); if (state === 'playing') tryShoot(); }
+  if (e.code === 'KeyX')  { if (state === 'playing') useBomb(); }
+});
+window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+// Mobile touch
+let touchStartX = 0;
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  touchStartX = t.clientX;
+  const rect = canvas.getBoundingClientRect();
+  const tx = (t.clientX - rect.left) * (W / rect.width);
+  if (tx < W * 0.33) keys['ArrowLeft'] = true;
+  else if (tx > W * 0.66) keys['ArrowRight'] = true;
+  else if (state === 'playing') tryShoot();
+}, { passive: false });
+canvas.addEventListener('touchend', () => { keys['ArrowLeft'] = false; keys['ArrowRight'] = false; });
+
+// ── HELPERS ────────────────────────────────────
+function spawnEnemies() {
+  enemies = [];
+  for (let r = 0; r < CONFIG.ENEMY_ROWS; r++) {
+    for (let c = 0; c < CONFIG.ENEMY_COLS; c++) {
+      enemies.push({
+        x: 55 + c * 62,
+        y: 60 + r * 44,
+        w: 28, h: 20,
+        hp: CONFIG.ENEMY_HP + Math.floor(level / 3),
+        maxHp: CONFIG.ENEMY_HP + Math.floor(level / 3),
+        row: r, col: c,
+        alive: true,
+        shootCool: Math.random() * 60
+      });
+    }
+  }
+  enemyDir = 1;
+}
+
+function tryShoot() {
+  if (player.shootCool > 0) return;
+  bullets.push({ x: player.x, y: player.y - 14, vy: -CONFIG.BULLET_SPEED });
+  // spread shot at higher levels
+  if (level >= 3) {
+    bullets.push({ x: player.x - 10, y: player.y - 8, vy: -CONFIG.BULLET_SPEED, vx: -1 });
+    bullets.push({ x: player.x + 10, y: player.y - 8, vy: -CONFIG.BULLET_SPEED, vx: 1 });
+  }
+  player.shootCool = CONFIG.SHOOT_COOLDOWN;
+}
+
+function useBomb() {
+  if (player.bombs <= 0) return;
+  player.bombs--;
+  // kill all alive enemies
+  let killed = 0;
+  enemies.forEach(e => { if (e.alive) { e.alive = false; spawnParticles(e.x, e.y, C.enemy, 8); killed++; } });
+  score += killed * CONFIG.SCORE_BOMB;
+  enemyBullets = [];
+  // big flash
+  shakeTick = 20;
+  showMsg('💥 BOMB!');
+  updateHUD();
+}
+
+function spawnParticles(x, y, color, count = 12) {
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+    const speed = Math.random() * 3 + 1;
+    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, r: Math.random() * 3 + 1, life: 30 + Math.random() * 20, color });
+  }
+}
+
+function showMsg(text) {
+  msgText = text; msgTick = 60;
+}
+
+function updateHUD() {
+  document.getElementById('hud-score').textContent = score;
+  document.getElementById('hud-level').textContent = level;
+  // lives
+  const livesEl = document.getElementById('hud-lives');
+  livesEl.innerHTML = Array.from({length: CONFIG.PLAYER_LIVES}, (_, i) => `<span class="life-icon">${i < player.lives ? '♥' : '♡'}</span>`).join('');
+  // bombs
+  const bombsEl = document.getElementById('hud-bombs');
+  bombsEl.innerHTML = Array.from({length: CONFIG.PLAYER_BOMBS}, (_, i) => `<div class="bomb-pip ${i >= player.bombs ? 'used' : ''}"></div>`).join('');
+}
+
+function showScreen(id) {
+  ['screen-start', 'screen-over', 'screen-clear'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+function hideAllScreens() {
+  ['screen-start', 'screen-over', 'screen-clear'].forEach(s => document.getElementById(s).classList.add('hidden'));
+}
+
+function flashLevel() {
+  const el = document.getElementById('level-flash');
+  document.getElementById('level-flash-text').textContent = `LEVEL ${level}`;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1200);
+}
+
+// ── INIT ───────────────────────────────────────
+function initGame() {
+  score = 0; level = 1;
+  player.lives = CONFIG.PLAYER_LIVES;
+  player.bombs = CONFIG.PLAYER_BOMBS;
+  player.x = W / 2; player.y = H - 60;
+  player.shootCool = 0; player.invincible = 0;
+  player.trail = [];
+  bullets = []; enemyBullets = []; particles = [];
+  spawnEnemies();
+  updateHUD();
+}
+
+// ── DRAW ───────────────────────────────────────
+function drawStars() {
+  stars.forEach(s => {
+    s.y += s.speed;
+    if (s.y > H) { s.y = 0; s.x = Math.random() * W; }
+    ctx.globalAlpha = s.alpha;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+function drawPlayer() {
+  if (player.invincible > 0 && Math.floor(player.invincible / 4) % 2 === 0) return;
+  const { x, y } = player;
+  ctx.save();
+  ctx.shadowBlur = 18; ctx.shadowColor = C.player;
+  ctx.fillStyle = C.player;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 16);
+  ctx.lineTo(x - 10, y + 6);
+  ctx.lineTo(x - 4, y + 2);
+  ctx.lineTo(x, y + 8);
+  ctx.lineTo(x + 4, y + 2);
+  ctx.lineTo(x + 10, y + 6);
+  ctx.closePath();
+  ctx.fill();
+  // engine glow
+  ctx.fillStyle = '#FFD166';
+  ctx.shadowColor = '#FFD166';
+  ctx.beginPath();
+  ctx.moveTo(x - 5, y + 8);
+  ctx.lineTo(x + 5, y + 8);
+  ctx.lineTo(x, y + 14 + Math.random() * 4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawBullets() {
+  ctx.save();
+  ctx.shadowBlur = 8; ctx.shadowColor = C.bullet;
+  ctx.fillStyle = C.bullet;
+  bullets.forEach(b => {
+    ctx.fillRect(b.x - 2, b.y, 4, 12);
+  });
+  ctx.restore();
+}
+
+function drawEnemyBullets() {
+  ctx.save();
+  ctx.shadowBlur = 6; ctx.shadowColor = '#FF6B6B';
+  ctx.fillStyle = '#FF6B6B';
+  enemyBullets.forEach(b => {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function drawEnemies() {
+  enemies.forEach(e => {
+    if (!e.alive) return;
+    ctx.save();
+    ctx.shadowBlur = 8; ctx.shadowColor = C.enemy;
+    // enemy body
+    ctx.fillStyle = C.enemy;
+    ctx.fillRect(e.x - e.w / 2, e.y - e.h / 2, e.w, e.h);
+    // eyes
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(e.x - 8, e.y - 5, 5, 5);
+    ctx.fillRect(e.x + 3, e.y - 5, 5, 5);
+    // antennas
+    ctx.strokeStyle = C.enemy;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(e.x - 5, e.y - e.h / 2); ctx.lineTo(e.x - 5, e.y - e.h / 2 - 6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(e.x + 5, e.y - e.h / 2); ctx.lineTo(e.x + 5, e.y - e.h / 2 - 6); ctx.stroke();
+    // HP bar if > 1
+    if (e.maxHp > 1) {
+      ctx.fillStyle = '#333';
+      ctx.fillRect(e.x - 12, e.y + e.h / 2 + 2, 24, 3);
+      ctx.fillStyle = C.player;
+      ctx.fillRect(e.x - 12, e.y + e.h / 2 + 2, 24 * (e.hp / e.maxHp), 3);
+    }
+    ctx.restore();
+  });
+}
+
+function drawParticles() {
+  particles.forEach(p => {
+    ctx.globalAlpha = p.life / 50;
+    ctx.fillStyle = p.color;
+    ctx.shadowBlur = 4; ctx.shadowColor = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+}
+
+function drawMsg() {
+  if (msgTick <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, msgTick / 20);
+  ctx.fillStyle = C.ui;
+  ctx.font = `bold 22px ${CONFIG.KILL_MESSAGES ? "'JetBrains Mono'" : 'monospace'}`;
+  ctx.textAlign = 'center';
+  ctx.shadowBlur = 10; ctx.shadowColor = C.ui;
+  ctx.fillText(msgText, W / 2, 80);
+  ctx.restore();
+}
+
+// ── UPDATE ─────────────────────────────────────
+function update() {
+  if (state !== 'playing') return;
+
+  // player movement
+  if (keys['ArrowLeft'])  player.vx = Math.max(player.vx - 1.5, -CONFIG.PLAYER_SPEED);
+  else if (keys['ArrowRight']) player.vx = Math.min(player.vx + 1.5, CONFIG.PLAYER_SPEED);
+  else player.vx *= 0.8;
+  player.x = Math.max(20, Math.min(W - 20, player.x + player.vx));
+
+  // auto-shoot key
+  if (keys['Space']) tryShoot();
+  if (player.shootCool > 0) player.shootCool--;
+  if (player.invincible > 0) player.invincible--;
+
+  // player trail
+  player.trail.push({ x: player.x, y: player.y });
+  if (player.trail.length > 8) player.trail.shift();
+
+  // move bullets
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    const b = bullets[i];
+    b.x += b.vx || 0;
+    b.y += b.vy;
+    if (b.y < 0 || b.x < 0 || b.x > W) { bullets.splice(i, 1); continue; }
+    // hit enemy
+    let hit = false;
+    for (const e of enemies) {
+      if (!e.alive) continue;
+      if (Math.abs(b.x - e.x) < e.w / 2 + 2 && Math.abs(b.y - e.y) < e.h / 2 + 2) {
+        e.hp -= CONFIG.BULLET_DAMAGE;
+        spawnParticles(b.x, b.y, C.enemy, 4);
+        if (e.hp <= 0) {
+          e.alive = false;
+          score += CONFIG.SCORE_PER_KILL * level;
+          spawnParticles(e.x, e.y, C.enemy, 10);
+          const m = CONFIG.KILL_MESSAGES;
+          showMsg(m[Math.floor(Math.random() * m.length)]);
+        }
+        bullets.splice(i, 1);
+        hit = true;
+        updateHUD();
+        break;
+      }
+    }
+    if (hit) continue;
+  }
+
+  // move enemies
+  const alive = enemies.filter(e => e.alive);
+  if (alive.length === 0) { nextLevel(); return; }
+
+  let edge = false;
+  const speed = CONFIG.ENEMY_SPEED_X * (1 + level * 0.15) * (1 + (CONFIG.ENEMY_ROWS * CONFIG.ENEMY_COLS - alive.length) / 20);
+  alive.forEach(e => { e.x += enemyDir * speed; if (e.x > W - 20 || e.x < 20) edge = true; });
+  if (edge) { enemyDir *= -1; alive.forEach(e => e.y += CONFIG.ENEMY_DROP_Y); }
+
+  // enemy shoot
+  alive.forEach(e => {
+    if (e.shootCool > 0) { e.shootCool--; return; }
+    if (Math.random() < CONFIG.ENEMY_SHOOT_CHANCE * level) {
+      enemyBullets.push({ x: e.x, y: e.y + e.h / 2, vy: 3 + level * 0.3 });
+      e.shootCool = 40 + Math.random() * 40;
+    }
+  });
+
+  // enemy reaches bottom
+  if (alive.some(e => e.y + e.h / 2 > H - 80)) { loseLife(); spawnEnemies(); }
+
+  // move enemy bullets
+  for (let i = enemyBullets.length - 1; i >= 0; i--) {
+    enemyBullets[i].y += enemyBullets[i].vy;
+    if (enemyBullets[i].y > H) { enemyBullets.splice(i, 1); continue; }
+    // hit player
+    if (player.invincible <= 0) {
+      const b = enemyBullets[i];
+      if (b && Math.abs(b.x - player.x) < 14 && Math.abs(b.y - player.y) < 14) {
+        enemyBullets.splice(i, 1);
+        loseLife();
+      }
+    }
+  }
+
+  // particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy;
+    p.vy += 0.05;
+    p.life--;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  // msg
+  if (msgTick > 0) msgTick--;
+}
+
+function loseLife() {
+  player.lives--;
+  player.invincible = 120;
+  shakeTick = CONFIG.SHAKE_FRAMES;
+  spawnParticles(player.x, player.y, C.player, 15);
+  updateHUD();
+  if (player.lives <= 0) {
+    state = 'over';
+    document.getElementById('final-score').textContent = score;
+    showScreen('screen-over');
+  }
+}
+
+function nextLevel() {
+  level++;
+  updateHUD();
+  bullets = []; enemyBullets = [];
+  const hasMore = level <= 5;
+  if (!hasMore) {
+    state = 'clear';
+    document.getElementById('clear-score').textContent = score;
+    showScreen('screen-clear');
+    return;
+  }
+  flashLevel();
+  showMsg(CONFIG.LEVEL_MESSAGES[level % CONFIG.LEVEL_MESSAGES.length]);
+  spawnEnemies();
+  // bonus life every 2 levels
+  if (level % 2 === 0 && player.lives < CONFIG.PLAYER_LIVES) { player.lives++; updateHUD(); }
+}
+
+// ── DRAW TRAIL ─────────────────────────────────
+function drawTrail() {
+  player.trail.forEach((p, i) => {
+    ctx.globalAlpha = (i / player.trail.length) * 0.15;
+    ctx.fillStyle = C.player;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+// ── MAIN LOOP ──────────────────────────────────
+function loop() {
+  // screen shake
+  ctx.save();
+  if (shakeTick > 0) {
+    ctx.translate(
+      (Math.random() - 0.5) * shakeTick * 1.5,
+      (Math.random() - 0.5) * shakeTick * 1.5
+    );
+    shakeTick--;
+  }
+
+  ctx.fillStyle = C.bg;
+  ctx.fillRect(-10, -10, W + 20, H + 20);
+
+  drawStars();
+  if (state !== 'start') {
+    drawTrail();
+    drawBullets();
+    drawEnemyBullets();
+    drawEnemies();
+    drawParticles();
+    drawPlayer();
+    drawMsg();
+    update();
+  }
+
+  ctx.restore();
+  requestAnimationFrame(loop);
+}
+
+// ── BUTTONS ────────────────────────────────────
+document.getElementById('btn-start').onclick = () => {
+  initGame(); state = 'playing'; hideAllScreens(); flashLevel();
+};
+document.getElementById('btn-restart').onclick = () => {
+  initGame(); state = 'playing'; hideAllScreens(); flashLevel();
+};
+document.getElementById('btn-next').onclick = () => {
+  // continue same game into bonus round
+  level = 1; score = 0; initGame(); state = 'playing'; hideAllScreens(); flashLevel();
+};
+
+// start loop
+updateHUD();
+loop();
+</script>
+</body>
+</html>
