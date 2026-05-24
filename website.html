@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Shooter × 千日文理教育</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#020407;--surface:#080c12;--card:#0c1220;--border:#141e2e;
+  --accent:#00FFB2;--red:#FF3355;--yellow:#FFD166;--purple:#A78BFA;
+  --text:#D0E0EE;--muted:#3a5060;
+  --fh:'Orbitron',monospace;--fb:'Noto Sans TC',sans-serif;--fm:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);overflow-x:hidden;cursor:default;}
+
+/* scanlines */
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);pointer-events:none;z-index:9999;}
+
+#starfield{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:0 2rem;}
+
+/* ── HEADER ── */
+.site-header{
+  padding:4rem 0 3rem;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+}
+.brand-chip{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--fm);font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--accent);border:1px solid rgba(0,255,178,.25);
+  background:rgba(0,255,178,.05);border-radius:3px;
+  padding:5px 16px;margin-bottom:1.8rem;
+}
+.brand-chip::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.site-title{
+  font-family:var(--fh);font-size:clamp(2.2rem,6vw,4rem);
+  font-weight:900;letter-spacing:.08em;text-transform:uppercase;
+  line-height:1.05;margin-bottom:.6rem;
+}
+.site-title .t1{display:block;color:var(--text);}
+.site-title .t2{display:block;color:var(--accent);text-shadow:0 0 40px rgba(0,255,178,.4),0 0 80px rgba(0,255,178,.15);}
+.site-sub{
+  font-family:var(--fm);font-size:12px;color:var(--muted);
+  letter-spacing:.15em;margin-bottom:2rem;
+}
+.play-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--fh);font-size:13px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;
+  padding:14px 36px;background:var(--accent);color:#000;
+  border-radius:4px;text-decoration:none;
+  transition:transform .2s,box-shadow .2s;
+  box-shadow:0 0 30px rgba(0,255,178,.3);
+}
+.play-btn:hover{transform:translateY(-2px);box-shadow:0 0 55px rgba(0,255,178,.55);}
+
+/* ── INTRO ── */
+.intro-section{padding:5rem 0;}
+.section-label{
+  font-family:var(--fm);font-size:10px;letter-spacing:.28em;
+  text-transform:uppercase;color:var(--accent);
+  display:flex;align-items:center;gap:8px;margin-bottom:1rem;
+  opacity:.7;
+}
+.section-label::before{content:'//';opacity:.5;}
+.intro-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-top:2.5rem;}
+.intro-text{font-size:15px;line-height:2;color:var(--text);opacity:.85;}
+.intro-text p{margin-bottom:1.2rem;}
+.intro-text strong{color:var(--accent);font-weight:700;}
+.intro-text em{font-style:normal;color:var(--yellow);}
+
+.feat-list{display:flex;flex-direction:column;gap:10px;}
+.feat-item{
+  display:flex;align-items:flex-start;gap:12px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:6px;padding:1rem 1.2rem;
+  transition:border-color .2s,transform .2s;
+}
+.feat-item:hover{border-color:rgba(0,255,178,.25);transform:translateX(4px);}
+.feat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:7px;}
+.feat-body{}
+.feat-title{font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:.08em;margin-bottom:3px;}
+.feat-desc{font-size:13px;color:var(--muted);line-height:1.6;}
+
+/* ── REEL ── */
+.reel-section{padding:5rem 0 6rem;}
+.reel-center{display:flex;justify-content:center;margin-top:2.5rem;}
+
+/* 手機外框 */
+.phone{
+  width:300px;flex-shrink:0;
+  background:linear-gradient(160deg,#0e141e,#080c14);
+  border:1.5px solid rgba(0,255,178,.2);
+  border-radius:42px;padding:16px 16px 24px;
+  box-shadow:0 0 80px rgba(0,255,178,.07),0 0 160px rgba(0,255,178,.03);
+  position:relative;
+}
+.phone-notch{width:80px;height:22px;background:#020407;border-radius:11px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;}
+.phone-notch::after{content:'';width:7px;height:7px;background:#101820;border-radius:50%;}
+.phone-screen{border-radius:28px;overflow:hidden;background:#000;position:relative;aspect-ratio:9/16;}
+#reelCanvas{display:block;width:100%;height:100%;}
+.phone-bottom{height:32px;display:flex;align-items:center;justify-content:center;margin-top:12px;}
+.phone-bar{width:90px;height:4px;background:rgba(0,255,178,.25);border-radius:2px;}
+
+/* 控制列 */
+.reel-controls{
+  width:300px;flex-shrink:0;
+  display:flex;flex-direction:column;
+  justify-content:center;gap:1.4rem;
+  padding-left:2.4rem;
+}
+.reel-meta{font-family:var(--fm);font-size:10px;color:var(--accent);letter-spacing:.18em;opacity:.6;}
+.reel-ctrl-title{font-family:var(--fh);font-size:1.3rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;line-height:1.25;}
+.reel-ctrl-sub{font-size:13px;color:var(--muted);line-height:1.8;}
+
+/* 播放進度條 */
+.progress-wrap{position:relative;padding:8px 0;cursor:pointer;}
+.progress-track{
+  height:3px;background:rgba(255,255,255,.08);
+  border-radius:2px;position:relative;overflow:hidden;
+}
+.progress-fill{
+  height:100%;background:var(--accent);width:0%;
+  border-radius:2px;transition:width .08s linear;
+  box-shadow:0 0 8px var(--accent);
+}
+.progress-thumb{
+  position:absolute;top:50%;right:0;
+  width:11px;height:11px;background:var(--accent);
+  border-radius:50%;transform:translate(50%,-50%);
+  box-shadow:0 0 10px var(--accent);
+  transition:right .08s linear;
+  pointer-events:none;
+}
+.time-row{
+  display:flex;justify-content:space-between;
+  font-family:var(--fm);font-size:10px;color:var(--muted);
+  letter-spacing:.08em;margin-top:4px;
+}
+
+/* 播放按鈕列 */
+.ctrl-btns{display:flex;align-items:center;gap:12px;}
+.ctrl-btn{
+  font-family:var(--fm);font-size:12px;
+  padding:8px 18px;border-radius:4px;
+  border:1px solid var(--border);
+  color:var(--muted);background:transparent;
+  cursor:pointer;letter-spacing:.08em;
+  transition:border-color .2s,color .2s,background .2s;
+}
+.ctrl-btn.primary{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600;}
+.ctrl-btn:hover:not(.primary){border-color:var(--accent);color:var(--accent);}
+.ctrl-btn.primary:hover{opacity:.85;}
+.vol-row{display:flex;align-items:center;gap:8px;}
+.vol-label{font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:.1em;min-width:24px;}
+.vol-slider{
+  -webkit-appearance:none;appearance:none;
+  flex:1;height:3px;background:rgba(255,255,255,.1);
+  border-radius:2px;outline:none;cursor:pointer;
+}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px var(--accent);}
+
+/* 時間軸 */
+.timestamps{display:flex;flex-direction:column;gap:0;margin-top:.5rem;}
+.ts{display:flex;gap:10px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);transition:color .15s;cursor:pointer;}
+.ts:last-child{border-bottom:none;}
+.ts.active .ts-t{color:var(--accent);} .ts.active .ts-l{color:var(--text);}
+.ts-t{font-family:var(--fm);font-size:11px;color:var(--muted);min-width:34px;flex-shrink:0;margin-top:1px;}
+.ts-l{font-size:12px;color:var(--muted);line-height:1.5;}
+
+/* mobile */
+@media(max-width:680px){
+  .intro-grid{grid-template-columns:1fr;}
+  .reel-center{flex-direction:column;align-items:center;gap:2rem;}
+  .reel-controls{padding-left:0;width:100%;max-width:300px;}
+}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1);}
+.reveal.in{opacity:1;transform:none;}
+.rd1{transition-delay:.09s;}.rd2{transition-delay:.18s;}.rd3{transition-delay:.27s;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+.site-header>*{opacity:0;animation:fadeUp .7s ease both;}
+.brand-chip{animation-delay:.05s;}.site-title{animation-delay:.18s;}
+.site-sub{animation-delay:.3s;}.play-btn{animation-delay:.42s;}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem 0;text-align:center;}
+.ft{font-family:var(--fm);font-size:11px;color:var(--muted);}
+.ft span{color:var(--accent);}
+</style>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+
+<div class="wrap">
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="brand-chip">千日文理教育 × Vibe Coding Camp</div>
+  <h1 class="site-title">
+    <span class="t1">SPACE</span>
+    <span class="t2">SHOOTER</span>
+  </h1>
+  <div class="site-sub">// 學生作品 · AI 製作 · 48h 完成</div>
+  <a href="https://qian0307.github.io/aigame/" target="_blank" rel="noopener" class="play-btn">
+    <span>▶</span> 立即遊玩
+  </a>
+</header>
+
+<!-- ── 介紹文案 ── -->
+<section class="intro-section">
+  <div class="section-label reveal">about this game</div>
+  <div class="intro-grid">
+    <div class="intro-text reveal rd1">
+      <p>這款遊戲誕生於<strong>千日文理教育 Vibe Coding Camp</strong> 的兩天密集工作坊。製作者在課程開始前，從未碰過任何一行程式碼。</p>
+      <p>透過 <strong>OpenAI Codex</strong> 生成遊戲骨架、<strong>Claude</strong> 優化邏輯並修正 bug、<strong>Cursor</strong> 即時編輯程式碼，<strong>Gemini 1.5 Pro</strong> 輔助視覺設計——整個工作流程不超過 <em>48 小時</em>。</p>
+      <p>遊戲包含完整的<strong>五個關卡</strong>、粒子爆炸特效、螢幕震動回饋、炸彈清場系統，以及第三關解鎖的三叉彈機制。所有功能全部由 AI 工具協助實現。</p>
+    </div>
+    <div class="feat-list reveal rd2">
+      <div class="feat-item">
+        <div class="feat-dot" style="background:#00FFB2;box-shadow:0 0 8px #00FFB2;"></div>
+        <div class="feat-body"><div class="feat-title" style="color:#00FFB2;">五關完整流程</div><div class="feat-desc">難度隨關卡遞增，敵人速度、血量、射擊頻率全面提升</div></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-dot" style="background:#FF3355;box-shadow:0 0 8px #FF3355;"></div>
+        <div class="feat-body"><div class="feat-title" style="color:#FF3355;">粒子爆炸特效</div><div class="feat-desc">擊殺觸發粒子炸裂，受傷有螢幕震動回饋，畫面張力十足</div></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-dot" style="background:#FFD166;box-shadow:0 0 8px #FFD166;"></div>
+        <div class="feat-body"><div class="feat-title" style="color:#FFD166;">炸彈清場技能</div><div class="feat-desc">X 鍵釋放炸彈，清除所有存活敵人並獲得額外獎勵分數</div></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-dot" style="background:#A78BFA;box-shadow:0 0 8px #A78BFA;"></div>
+        <div class="feat-body"><div class="feat-title" style="color:#A78BFA;">三叉彈解鎖</div><div class="feat-desc">第三關後自動解鎖，三條彈道同時輸出，清場效率翻倍</div></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-dot" style="background:#4DB8FF;box-shadow:0 0 8px #4DB8FF;"></div>
+        <div class="feat-body"><div class="feat-title" style="color:#4DB8FF;">手機觸控支援</div><div class="feat-desc">點擊左右移動，點擊中間射擊，電腦手機都能玩</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── REEL ── -->
+<section class="reel-section">
+  <div class="section-label reveal">game reel</div>
+  <div class="reel-center reveal rd1">
+
+    <!-- 手機外框 -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <canvas id="reelCanvas" width="268" height="476"></canvas>
+      </div>
+      <div class="phone-bottom"><div class="phone-bar"></div></div>
+    </div>
+
+    <!-- 控制列 -->
+    <div class="reel-controls">
+      <div class="reel-meta">// 60 秒遊戲 Reel · 電子音效</div>
+      <div class="reel-ctrl-title">SPACE<br>SHOOTER<br>REEL 2025</div>
+      <div class="reel-ctrl-sub">完整展示射擊、爆炸、炸彈清場、三叉彈解鎖到通關的遊戲歷程，附合成電子 BGM 與音效。</div>
+
+      <!-- 進度條（可拉） -->
+      <div>
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-thumb" id="progressThumb"></div>
+        </div>
+        <div class="time-row">
+          <span id="timeCurrent">0:00</span>
+          <span>1:00</span>
+        </div>
+      </div>
+
+      <!-- 播放按鈕 -->
+      <div class="ctrl-btns">
+        <button class="ctrl-btn primary" id="btnPlay">▶ 播放</button>
+        <button class="ctrl-btn" id="btnReplay">↺ 重播</button>
+      </div>
+
+      <!-- 音量 -->
+      <div class="vol-row">
+        <span class="vol-label">🔊</span>
+        <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.05" value="0.6">
+        <span class="vol-label" id="volVal">60%</span>
+      </div>
+
+      <!-- 時間軸 -->
+      <div class="timestamps" id="timestamps">
+        <div class="ts" data-sec="0"><span class="ts-t">0:00</span><span class="ts-l">開場片頭 — 遊戲標題與介紹</span></div>
+        <div class="ts" data-sec="10"><span class="ts-t">0:10</span><span class="ts-l">第一關 — 射擊、敵人移動、爆炸特效</span></div>
+        <div class="ts" data-sec="25"><span class="ts-t">0:25</span><span class="ts-l">炸彈技能 — 全畫面清場爆炸</span></div>
+        <div class="ts" data-sec="38"><span class="ts-t">0:38</span><span class="ts-l">三叉彈解鎖 — 紫色三連射火力全開</span></div>
+        <div class="ts" data-sec="52"><span class="ts-t">0:52</span><span class="ts-l">通關畫面 — 煙火 + 最終得分</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="ft"><span>千日文理教育</span> × Vibe Coding Camp · <a href="https://qian0307.github.io/aigame/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">▶ 立即遊玩</a></div>
+  </div>
+</footer>
+
+</div><!-- .wrap -->
+
+<script>
+/* ══════════════════════════════════════
+   星空背景
+══════════════════════════════════════ */
+const sf=document.getElementById('starfield'),sx=sf.getContext('2d');
+function resizeSF(){sf.width=window.innerWidth;sf.height=window.innerHeight;}
+resizeSF();window.addEventListener('resize',resizeSF);
+const bgS=Array.from({length:100},()=>({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,r:Math.random()*1.1+.2,sp:Math.random()*.35+.05,a:Math.random()*.6+.15,tw:Math.random()*Math.PI*2}));
+(function loop(){sx.clearRect(0,0,sf.width,sf.height);bgS.forEach(s=>{s.y+=s.sp;s.tw+=.015;if(s.y>sf.height){s.y=0;s.x=Math.random()*sf.width;}sx.globalAlpha=s.a*(.75+.25*Math.sin(s.tw));sx.fillStyle='#fff';sx.beginPath();sx.arc(s.x,s.y,s.r,0,Math.PI*2);sx.fill();});sx.globalAlpha=1;requestAnimationFrame(loop);})();
+
+/* ══════════════════════════════════════
+   Web Audio — 合成 BGM + 音效
+══════════════════════════════════════ */
+let audioCtx=null,masterGain=null,bgmNode=null,bgmGain=null;
+let volume=0.6;
+
+function ensureAudio(){
+  if(audioCtx) return;
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  masterGain=audioCtx.createGain();masterGain.gain.value=volume;masterGain.connect(audioCtx.destination);
+}
+
+/* 短音效 */
+function playTone(freq,dur,type='square',vol=.18,detune=0){
+  if(!audioCtx)return;
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=type;o.frequency.value=freq;o.detune.value=detune;
+  g.gain.setValueAtTime(vol,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);
+  o.connect(g);g.connect(masterGain);
+  o.start();o.stop(audioCtx.currentTime+dur);
+}
+function playShoot(){playTone(880,.08,'square',.12);playTone(440,.06,'sawtooth',.06,1200);}
+function playExplode(){
+  // 噪音炸裂
+  if(!audioCtx)return;
+  const buf=audioCtx.createBuffer(1,audioCtx.sampleRate*.3,audioCtx.sampleRate);
+  const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1);
+  const src=audioCtx.createBufferSource(),g=audioCtx.createGain(),f=audioCtx.createBiquadFilter();
+  f.type='bandpass';f.frequency.value=300;f.Q.value=.5;
+  src.buffer=buf;g.gain.setValueAtTime(.3,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.3);
+  src.connect(f);f.connect(g);g.connect(masterGain);src.start();
+}
+function playBomb(){
+  if(!audioCtx)return;
+  const buf=audioCtx.createBuffer(1,audioCtx.sampleRate*.6,audioCtx.sampleRate);
+  const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/(audioCtx.sampleRate*.6));
+  const src=audioCtx.createBufferSource(),g=audioCtx.createGain(),f=audioCtx.createBiquadFilter();
+  f.type='lowpass';f.frequency.value=400;
+  src.buffer=buf;g.gain.value=.7;
+  src.connect(f);f.connect(g);g.connect(masterGain);src.start();
+  // bass drop
+  const o=audioCtx.createOscillator(),og=audioCtx.createGain();
+  o.type='sine';o.frequency.setValueAtTime(120,audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(30,audioCtx.currentTime+.5);
+  og.gain.setValueAtTime(.5,audioCtx.currentTime);og.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.5);
+  o.connect(og);og.connect(masterGain);o.start();o.stop(audioCtx.currentTime+.5);
+}
+function playLevelUp(){
+  const notes=[440,554,659,880];
+  notes.forEach((f,i)=>{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type='triangle';o.frequency.value=f;
+    g.gain.setValueAtTime(.15,audioCtx.currentTime+i*.08);
+    g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+i*.08+.18);
+    o.connect(g);g.connect(masterGain);o.start(audioCtx.currentTime+i*.08);o.stop(audioCtx.currentTime+i*.08+.2);
+  });
+}
+function playWin(){
+  const notes=[523,659,784,1047,1319];
+  notes.forEach((f,i)=>{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type='triangle';o.frequency.value=f;
+    g.gain.setValueAtTime(.2,audioCtx.currentTime+i*.1);
+    g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+i*.1+.3);
+    o.connect(g);g.connect(masterGain);o.start(audioCtx.currentTime+i*.1);o.stop(audioCtx.currentTime+i*.1+.35);
+  });
+}
+
+/* BGM — 簡單電子節奏 */
+let bgmInterval=null;
+const SCALE=[130,155,196,220,262,311,349,392];
+let bgmStep=0;
+function startBGM(){
+  if(bgmInterval)return;
+  bgmInterval=setInterval(()=>{
+    if(!audioCtx)return;
+    // kick
+    const kick=audioCtx.createOscillator(),kg=audioCtx.createGain();
+    kick.type='sine';kick.frequency.setValueAtTime(120,audioCtx.currentTime);
+    kick.frequency.exponentialRampToValueAtTime(40,audioCtx.currentTime+.08);
+    kg.gain.setValueAtTime(.25,audioCtx.currentTime);kg.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.12);
+    kick.connect(kg);kg.connect(masterGain);kick.start();kick.stop(audioCtx.currentTime+.12);
+    // melody
+    if(bgmStep%2===0){
+      const freq=SCALE[bgmStep%SCALE.length];
+      const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+      o.type='square';o.frequency.value=freq;
+      g.gain.setValueAtTime(.05,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.09);
+      o.connect(g);g.connect(masterGain);o.start();o.stop(audioCtx.currentTime+.1);
+    }
+    bgmStep++;
+  },180);
+}
+function stopBGM(){if(bgmInterval){clearInterval(bgmInterval);bgmInterval=null;}}
+
+/* ══════════════════════════════════════
+   Reel Canvas — 60秒劇情動畫
+══════════════════════════════════════ */
+const rc=document.getElementById('reelCanvas'),rx=rc.getContext('2d');
+const RW=268,RH=476;
+const TOTAL=60;
+
+let reelPlaying=false,reelTime=0,reelLastTS=null;
+let rScore=0,rShake=0,rBombFlash=0;
+const rShip={x:RW/2,y:RH-80};
+const rBullets=[],rBullets3=[],rEnemies=[],rParts=[];
+
+// 已觸發標記（防止重複播音效）
+const triggered={shoot:{},explode:{},bomb:false,levelup:false,win:false};
+
+function initEnemies(rows,cols,y0){
+  rEnemies.length=0;
+  for(let r=0;r<rows;r++)
+    for(let c=0;c<cols;c++)
+      rEnemies.push({x:20+c*(RW-40)/(cols-1||1),y:y0+r*34,alive:true});
+}
+function spawnP(x,y,col,n=10){
+  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=Math.random()*4+1;rParts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:Math.random()*2.5+.5,life:22+Math.random()*14,col});}
+}
+
+/* ─ Stars ─ */
+const rStars=Array.from({length:55},()=>({x:Math.random()*RW,y:Math.random()*RH,r:Math.random()+.2,sp:Math.random()*.5+.1,a:Math.random()*.6+.2}));
+function drawRStars(){rStars.forEach(s=>{s.y+=s.sp;if(s.y>RH){s.y=0;s.x=Math.random()*RW;}rx.globalAlpha=s.a;rx.fillStyle='#fff';rx.beginPath();rx.arc(s.x,s.y,s.r,0,Math.PI*2);rx.fill();});rx.globalAlpha=1;}
+
+/* ─ Ship ─ */
+function drawShip(x,y){
+  rx.save();rx.shadowBlur=14;rx.shadowColor='#00FFB2';rx.fillStyle='#00FFB2';
+  rx.beginPath();rx.moveTo(x,y-14);rx.lineTo(x-10,y+7);rx.lineTo(x-3,y+2);rx.lineTo(x,y+8);rx.lineTo(x+3,y+2);rx.lineTo(x+10,y+7);rx.closePath();rx.fill();
+  rx.fillStyle='#FFD166';rx.shadowColor='#FFD166';
+  rx.beginPath();rx.moveTo(x-4,y+8);rx.lineTo(x+4,y+8);rx.lineTo(x,y+16+Math.random()*4);rx.closePath();rx.fill();
+  rx.restore();
+}
+function drawEnemy(x,y,col='#FF3355'){
+  rx.save();rx.shadowBlur=7;rx.shadowColor=col;rx.fillStyle=col;
+  rx.fillRect(x-11,y-7,22,14);rx.shadowBlur=0;
+  rx.fillStyle='#fff';rx.fillRect(x-6,y-3,4,4);rx.fillRect(x+2,y-3,4,4);
+  rx.restore();
+}
+function mono(t,x,y,sz,col,align='center'){
+  rx.save();rx.fillStyle=col;rx.font=`${sz}px 'JetBrains Mono',monospace`;rx.textAlign=align;rx.fillText(t,x,y);rx.restore();
+}
+function orbi(t,x,y,sz,col,align='center',glow=true){
+  rx.save();if(glow){rx.shadowBlur=18;rx.shadowColor=col;}
+  rx.fillStyle=col;rx.font=`bold ${sz}px 'Orbitron',monospace`;rx.textAlign=align;rx.fillText(t,x,y);rx.restore();
+}
+
+/* ─ 主繪製 ─ */
+function drawFrame(t){
+  // shake
+  let ox=0,oy=0;
+  if(rShake>0){ox=(Math.random()-.5)*rShake*2.5;oy=(Math.random()-.5)*rShake*2.5;rShake--;}
+  rx.save();rx.translate(ox,oy);
+  rx.fillStyle='#00000c';rx.fillRect(-10,-10,RW+20,RH+20);
+  if(rBombFlash>0){rx.fillStyle=`rgba(0,255,178,${rBombFlash/18*.28})`;rx.fillRect(-10,-10,RW+20,RH+20);rBombFlash--;}
+  drawRStars();
+
+  /* 0–9 : 片頭 */
+  if(t<10){
+    const p=Math.min(1,t/3);
+    rx.save();rx.globalAlpha=p;
+    orbi('SPACE',RW/2,RH/2-36,26,'#00FFB2');
+    orbi('SHOOTER',RW/2,RH/2-4,20,'#fff',undefined,false);
+    rx.globalAlpha=Math.max(0,p*1.5-.3);
+    mono('千日文理教育',RW/2,RH/2+28,11,'#3a5060');
+    mono('× Vibe Coding Camp',RW/2,RH/2+46,10,'#3a5060');
+    rx.restore();
+    // 閃爍粒子
+    if(Math.random()<.1){rParts.push({x:Math.random()*RW,y:Math.random()*RH,vx:0,vy:0,r:.5,life:10,col:'#00FFB2'});}
+  }
+
+  /* 10–24 : 第一關 */
+  if(t>=10&&t<25){
+    const lo=t-10;
+    if(lo<.05&&rEnemies.length===0) initEnemies(2,4,80);
+    rShip.x=RW/2+Math.sin(lo*.55)*70;
+    // shoot
+    const sf=Math.floor(lo*60);
+    if(sf%18===0&&!triggered.shoot[sf]){triggered.shoot[sf]=true;playShoot();rBullets.push({x:rShip.x,y:rShip.y-14,vy:-8});}
+    // bullets
+    for(let i=rBullets.length-1;i>=0;i--){
+      rBullets[i].y+=rBullets[i].vy;
+      rx.save();rx.shadowBlur=7;rx.shadowColor='#fff';rx.fillStyle='#fff';rx.fillRect(rBullets[i].x-2,rBullets[i].y,4,9);rx.restore();
+      if(rBullets[i].y<0){rBullets.splice(i,1);continue;}
+      let hit=false;
+      for(const e of rEnemies){if(!e.alive||!rBullets[i])continue;if(Math.abs(rBullets[i].x-e.x)<13&&Math.abs(rBullets[i].y-e.y)<10){e.alive=false;spawnP(rBullets[i].x,rBullets[i].y,'#FF3355',8);rBullets.splice(i,1);rScore+=10;rShake=4;playExplode();hit=true;break;}}
+      if(hit)continue;
+    }
+    const al=rEnemies.filter(e=>e.alive);if(al.length===0)initEnemies(2,4,80);
+    rEnemies.forEach(e=>{if(!e.alive)return;e.x+=Math.sin(lo*.45)*1.2;drawEnemy(e.x,e.y);});
+    drawShip(rShip.x,rShip.y);
+    mono(`SCORE  ${rScore}`,RW/2,22,10,'#00FFB2');mono('LEVEL  01',RW/2,36,9,'#3a5060');
+  }
+
+  /* 25–37 : 炸彈 */
+  if(t>=25&&t<38){
+    const lo=t-25;
+    if(lo<.1&&rEnemies.filter(e=>e.alive).length===0)initEnemies(3,4,70);
+    rShip.x=RW/2+Math.sin(lo*.4)*55;
+    // 炸彈時刻
+    if(lo>=1&&lo<1.06&&!triggered.bomb){
+      triggered.bomb=true;playBomb();
+      rEnemies.forEach(e=>{if(e.alive){e.alive=false;spawnP(e.x,e.y,'#FFD166',14);}});
+      rParts.push(...Array.from({length:28},(_,i)=>{const a=i/28*Math.PI*2,s=3+Math.random()*5;return{x:RW/2,y:RH/2,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:1.8,life:28,col:'#FFD166'};}));
+      rBombFlash=18;rShake=14;rScore+=50;
+    }
+    if(lo<1){rEnemies.forEach(e=>{if(!e.alive)return;drawEnemy(e.x,e.y);});}
+    drawShip(rShip.x,rShip.y);
+    if(lo>=1.8&&lo<6){
+      rx.save();rx.globalAlpha=Math.min(1,(lo-1.8)/.5);
+      orbi('💣 BOMB!',RW/2,RH/2-16,18,'#FFD166');
+      mono('全清！+50分',RW/2,RH/2+14,12,'#3a5060');
+      rx.restore();
+    }
+    if(lo>=6){
+      const f=Math.floor(lo*60);
+      if(f%20===0&&!triggered.shoot[`b${f}`]){triggered.shoot[`b${f}`]=true;playShoot();rBullets.push({x:rShip.x,y:rShip.y-14,vy:-9});}
+      for(let i=rBullets.length-1;i>=0;i--){
+        rBullets[i].y+=rBullets[i].vy;
+        rx.fillStyle='#fff';rx.fillRect(rBullets[i].x-2,rBullets[i].y,4,9);
+        if(rBullets[i].y<0){rBullets.splice(i,1);}
+      }
+      if(rEnemies.filter(e=>e.alive).length===0)initEnemies(2,4,80);
+      rEnemies.forEach(e=>{if(!e.alive)return;drawEnemy(e.x,e.y);});
+    }
+    mono(`SCORE  ${rScore}`,RW/2,22,10,'#00FFB2');mono('BOMBS  ♦♦♦',RW/2,36,9,'#FFD166');
+  }
+
+  /* 38–51 : 三叉彈 */
+  if(t>=38&&t<52){
+    const lo=t-38;
+    if(lo<.08&&rEnemies.filter(e=>e.alive).length===0)initEnemies(3,5,60);
+    if(lo<.08&&!triggered.levelup){triggered.levelup=true;playLevelUp();}
+    rShip.x=RW/2+Math.sin(lo*.7)*65;
+    const f=Math.floor(lo*60);
+    if(f%14===0&&!triggered.shoot[`c${f}`]){
+      triggered.shoot[`c${f}`]=true;playShoot();
+      rBullets3.push({x:rShip.x,y:rShip.y-14,vx:0,vy:-9});
+      rBullets3.push({x:rShip.x,y:rShip.y-10,vx:-2.2,vy:-8.5});
+      rBullets3.push({x:rShip.x,y:rShip.y-10,vx:2.2,vy:-8.5});
+    }
+    for(let i=rBullets3.length-1;i>=0;i--){
+      rBullets3[i].x+=rBullets3[i].vx;rBullets3[i].y+=rBullets3[i].vy;
+      rx.save();rx.shadowBlur=7;rx.shadowColor='#A78BFA';rx.fillStyle='#A78BFA';rx.fillRect(rBullets3[i].x-2,rBullets3[i].y,4,9);rx.restore();
+      if(rBullets3[i].y<0||rBullets3[i].x<-5||rBullets3[i].x>RW+5){rBullets3.splice(i,1);continue;}
+      let hit=false;
+      for(const e of rEnemies){if(!e.alive||!rBullets3[i])continue;if(Math.abs(rBullets3[i].x-e.x)<13&&Math.abs(rBullets3[i].y-e.y)<10){e.alive=false;spawnP(e.x,e.y,'#A78BFA',10);rBullets3.splice(i,1);rScore+=15;rShake=3;playExplode();hit=true;break;}}
+      if(hit)continue;
+    }
+    const al=rEnemies.filter(e=>e.alive);if(al.length===0)initEnemies(3,5,60);
+    rEnemies.forEach(e=>{if(!e.alive)return;e.x+=Math.sin(lo*.5+e.y*.04);drawEnemy(e.x,e.y,'#FF3355');});
+    drawShip(rShip.x,rShip.y);
+    if(lo<3){rx.save();rx.globalAlpha=Math.min(1,lo/.4);orbi('🔓 三叉彈解鎖',RW/2,RH-56,11,'#A78BFA');rx.restore();}
+    mono(`SCORE  ${rScore}`,RW/2,22,10,'#00FFB2');mono('LEVEL  03',RW/2,36,9,'#A78BFA');
+  }
+
+  /* 52–60 : 通關 */
+  if(t>=52){
+    const lo=t-52;
+    if(lo<.1&&!triggered.win){triggered.win=true;playWin();}
+    // 煙火
+    if(Math.random()<.14){
+      const cx=Math.random()*RW,cy=Math.random()*RH*.65;
+      const cols=['#00FFB2','#FFD166','#FF3355','#A78BFA','#4DB8FF'];
+      spawnP(cx,cy,cols[Math.floor(Math.random()*cols.length)],18);
+    }
+    drawShip(RW/2,rShip.y);
+    rx.save();rx.globalAlpha=Math.min(1,lo*.4);
+    orbi('YOU WIN!',RW/2,RH/2-46,24,'#FFD166');
+    orbi(`${rScore}`,RW/2,RH/2+14,42,'#fff',undefined,false);
+    mono('FINAL SCORE',RW/2,RH/2+38,11,'#3a5060');
+    rx.globalAlpha=Math.min(1,Math.max(0,lo-2)*1.2);
+    mono('千日文理教育',RW/2,RH/2+68,11,'#00FFB2');
+    mono('Vibe Coding Camp',RW/2,RH/2+86,10,'#3a5060');
+    rx.restore();
+    if(lo>6){rx.save();rx.globalAlpha=(lo-6)/2*.25;rx.fillStyle='#00FFB2';rx.fillRect(-10,-10,RW+20,RH+20);rx.restore();}
+  }
+
+  // 粒子
+  for(let i=rParts.length-1;i>=0;i--){
+    const p=rParts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.07;p.life--;
+    rx.globalAlpha=Math.max(0,p.life/36);rx.fillStyle=p.col;rx.shadowBlur=4;rx.shadowColor=p.col;
+    rx.beginPath();rx.arc(p.x,p.y,p.r,0,Math.PI*2);rx.fill();
+    rx.globalAlpha=1;rx.shadowBlur=0;
+    if(p.life<=0)rParts.splice(i,1);
+  }
+
+  rx.restore();
+}
+
+/* ── RAF 主迴圈 ── */
+function rafLoop(ts){
+  if(reelPlaying){
+    if(!reelLastTS) reelLastTS=ts;
+    const dt=(ts-reelLastTS)/1000;
+    reelLastTS=ts;
+    reelTime=Math.min(reelTime+dt,TOTAL);
+    updateProgress();
+    drawFrame(reelTime);
+    if(reelTime<TOTAL) requestAnimationFrame(rafLoop);
+    else {
+      reelPlaying=false;reelLastTS=null;stopBGM();
+      document.getElementById('btnPlay').textContent='▶ 播放';
+    }
+  }
+}
+
+/* ── 進度條互動 ── */
+function updateProgress(){
+  const pct=reelTime/TOTAL;
+  document.getElementById('progressFill').style.width=(pct*100)+'%';
+  document.getElementById('progressThumb').style.right=(100-pct*100)+'%';
+  const s=Math.floor(reelTime),m=Math.floor(s/60);
+  document.getElementById('timeCurrent').textContent=`${m}:${(s%60).toString().padStart(2,'0')}`;
+  document.querySelectorAll('.ts').forEach(row=>{
+    const sec=parseInt(row.dataset.sec);
+    const next=row.nextElementSibling;
+    const nsec=next?parseInt(next.dataset.sec):TOTAL;
+    row.classList.toggle('active',reelTime>=sec&&reelTime<nsec);
+  });
+}
+
+// 拖拉進度條
+let dragging=false;
+const pw=document.getElementById('progressWrap');
+function seekTo(e){
+  const rect=pw.getBoundingClientRect();
+  const x=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+  reelTime=x*TOTAL;
+  // reset triggers for passed events
+  Object.keys(triggered).forEach(k=>{if(typeof triggered[k]==='boolean')triggered[k]=false;});
+  Object.keys(triggered.shoot).forEach(k=>delete triggered.shoot[k]);
+  updateProgress();
+  drawFrame(reelTime);
+}
+pw.addEventListener('mousedown',e=>{dragging=true;seekTo(e);});
+document.addEventListener('mousemove',e=>{if(dragging)seekTo(e);});
+document.addEventListener('mouseup',()=>{dragging=false;});
+pw.addEventListener('touchstart',e=>{dragging=true;seekTo(e.touches[0]);},{passive:true});
+document.addEventListener('touchmove',e=>{if(dragging)seekTo(e.touches[0]);},{passive:true});
+document.addEventListener('touchend',()=>{dragging=false;});
+
+// 時間軸點擊跳轉
+document.querySelectorAll('.ts').forEach(row=>{
+  row.addEventListener('click',()=>{
+    ensureAudio();
+    reelTime=parseInt(row.dataset.sec);
+    Object.keys(triggered).forEach(k=>{if(typeof triggered[k]==='boolean')triggered[k]=false;});
+    Object.keys(triggered.shoot).forEach(k=>delete triggered.shoot[k]);
+    updateProgress();drawFrame(reelTime);
+    if(!reelPlaying){reelPlaying=true;reelLastTS=null;startBGM();document.getElementById('btnPlay').textContent='⏸ 暫停';requestAnimationFrame(rafLoop);}
+  });
+});
+
+// 播放 / 暫停
+document.getElementById('btnPlay').addEventListener('click',()=>{
+  ensureAudio();
+  if(reelPlaying){
+    reelPlaying=false;reelLastTS=null;stopBGM();
+    document.getElementById('btnPlay').textContent='▶ 播放';
+  } else {
+    if(reelTime>=TOTAL){reelTime=0;rScore=0;rShake=0;rBombFlash=0;rBullets.length=0;rBullets3.length=0;rEnemies.length=0;rParts.length=0;Object.keys(triggered).forEach(k=>{if(typeof triggered[k]==='boolean')triggered[k]=false;});Object.keys(triggered.shoot).forEach(k=>delete triggered.shoot[k]);}
+    reelPlaying=true;reelLastTS=null;startBGM();
+    document.getElementById('btnPlay').textContent='⏸ 暫停';
+    requestAnimationFrame(rafLoop);
+  }
+});
+
+// 重播
+document.getElementById('btnReplay').addEventListener('click',()=>{
+  ensureAudio();
+  reelPlaying=false;reelLastTS=null;stopBGM();
+  reelTime=0;rScore=0;rShake=0;rBombFlash=0;
+  rBullets.length=0;rBullets3.length=0;rEnemies.length=0;rParts.length=0;
+  Object.keys(triggered).forEach(k=>{if(typeof triggered[k]==='boolean')triggered[k]=false;});
+  Object.keys(triggered.shoot).forEach(k=>delete triggered.shoot[k]);
+  updateProgress();drawFrame(0);
+  setTimeout(()=>{reelPlaying=true;reelLastTS=null;startBGM();document.getElementById('btnPlay').textContent='⏸ 暫停';requestAnimationFrame(rafLoop);},100);
+});
+
+// 音量
+document.getElementById('volSlider').addEventListener('input',function(){
+  volume=parseFloat(this.value);
+  document.getElementById('volVal').textContent=Math.round(volume*100)+'%';
+  if(masterGain) masterGain.gain.value=volume;
+});
+
+/* ── Scroll Reveal ── */
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+// 畫第一幀
+drawFrame(0);
+</script>
+</body>
+</html>
