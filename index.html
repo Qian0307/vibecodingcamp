@@ -344,6 +344,53 @@
     }
     .outcome-card p { font-size: 15px; color: var(--muted); line-height: 1.75; }
 
+    /* GAMES SHOWCASE */
+    .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    .game-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      transition: border-color 0.35s, transform 0.35s;
+    }
+    .game-card:hover { border-color: #9FE1CB55; transform: translateY(-5px); }
+    .game-preview {
+      background: var(--surface2);
+      border-bottom: 0.5px solid var(--border);
+      padding: 3rem 2rem;
+      text-align: center;
+      font-size: 4rem;
+    }
+    .game-info { padding: 1.8rem; }
+    .game-tag {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.6rem;
+    }
+    .game-info h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 0.7rem;
+    }
+    .game-info p { font-size: 14px; color: var(--muted); line-height: 1.75; margin-bottom: 1.4rem; }
+    .game-btn {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--accent-dark);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 10px 26px;
+      border-radius: 100px;
+      text-decoration: none;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .game-btn:hover { opacity: 0.85; transform: translateY(-2px); }
+
     /* SCHEDULE */
     .schedule-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
     .day-block {
@@ -484,6 +531,7 @@
       .hero { padding: 5rem 0 4rem; }
       .hero-sub { font-size: 1.1rem; }
       .outcomes-grid { grid-template-columns: 1fr; }
+      .games-grid { grid-template-columns: 1fr; }
       .schedule-wrapper { grid-template-columns: 1fr; }
       .tools-grid { grid-template-columns: 1fr; }
       .step-desc { margin-left: 0; margin-top: 6px; }
@@ -552,6 +600,33 @@
           <span class="outcome-icon">🌐</span>
           <h3>作品集網站</h3>
           <p>包含遊戲連結、Reel 影片、遊戲介紹的個人作品頁面，真實部署上線</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-label reveal">學生實際成品</div>
+      <h2 class="section-title reveal reveal-d1">這是學生在兩天內做出的遊戲</h2>
+      <div class="games-grid">
+        <div class="game-card reveal reveal-d1">
+          <div class="game-preview">🚀</div>
+          <div class="game-info">
+            <div class="game-tag">太空射擊遊戲</div>
+            <h3>Space Shooter</h3>
+            <p>五個完整關卡、粒子爆炸特效、炸彈清場技能、第三關解鎖三叉彈。支援手機觸控，使用 Claude + Cursor 製作。</p>
+            <a href="https://qian0307.github.io/aigame/" target="_blank" rel="noopener" class="game-btn">▶ 立即試玩</a>
+          </div>
+        </div>
+        <div class="game-card reveal reveal-d2">
+          <div class="game-preview">🎯</div>
+          <div class="game-info">
+            <div class="game-tag">第一人稱射擊 FPS</div>
+            <h3>Neural Strike</h3>
+            <p>第一人稱視角、波次制敵人、WASD 移動加滑鼠瞄準、換彈機制，完整的沉浸式 FPS 戰鬥體驗。</p>
+            <a href="https://qian0307.github.io/neural-strike/" target="_blank" rel="noopener" class="game-btn">▶ 立即試玩</a>
+          </div>
         </div>
       </div>
     </div>
