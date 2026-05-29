@@ -156,6 +156,20 @@
       letter-spacing: 0.06em;
       color: var(--accent);
     }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .nav-link {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--text); }
     .nav-cta {
       background: var(--accent);
       color: var(--accent-dark);
@@ -170,6 +184,10 @@
       transition: transform 0.2s, opacity 0.2s;
     }
     .nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
+    @media (max-width: 640px) {
+      .nav-links { gap: 16px; }
+      .nav-link { display: none; }
+    }
 
     /* HERO */
     .hero {
@@ -485,7 +503,11 @@
   <nav>
     <div class="inner">
       <div class="nav-logo">VIBE CODING CAMP</div>
-      <a href="#signup" class="nav-cta">立即報名</a>
+      <div class="nav-links">
+        <a href="game.html" class="nav-link" target="_blank">試玩遊戲</a>
+        <a href="website.html" class="nav-link" target="_blank">作品範例</a>
+        <a href="#signup" class="nav-cta">立即報名</a>
+      </div>
     </div>
   </nav>
 
@@ -669,8 +691,8 @@
       <h2 class="reveal">你的作品，<span style="color:var(--accent)">兩天後上線</span></h2>
       <p class="reveal reveal-d1">不需要任何程式基礎。帶一台電腦，帶一個 idea。</p>
       <div class="cta-group reveal reveal-d2">
-        <a href="#" class="btn-primary">立即報名 →</a>
-        <a href="#" class="btn-secondary">了解更多</a>
+        <a href="#signup" class="btn-primary">立即報名 →</a>
+        <a href="website.html" target="_blank" class="btn-secondary">看作品範例</a>
       </div>
     </div>
   </section>
