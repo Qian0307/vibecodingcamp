@@ -1,796 +1,1048 @@
 <!DOCTYPE html>
+<!--
+  Vibe Coding Camp — 報名表單 v2
+  ─────────────────────────────────────────────
+  部署說明：
+  1. 完成 Code.gs 的 Google Apps Script 部署（詳見 Code.gs 頂端）
+  2. 取得 Web App URL 後，替換下方 JS 的 SCRIPT_URL
+  3. 用瀏覽器直接開啟此 index.html 即可使用
+  ─────────────────────────────────────────────
+-->
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vibe Coding Camp｜千日文理教育</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vibe Coding Camp — 報名表單</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0c0c0c;
-      --surface: #161616;
-      --surface2: #1e1e1e;
-      --border: #2a2a2a;
-      --text: #f0f0f0;
-      --muted: #888;
-      --accent: #9FE1CB;
-      --accent-dark: #04342C;
-      --purple: #AFA9EC;
-      --purple-bg: #1a1930;
-      --teal: #5DCAA5;
-      --teal-bg: #0d2620;
-      --amber: #EF9F27;
+      --blue-dark:   #0a1628;
+      --blue-mid:    #0d2145;
+      --blue:        #1a3a6b;
+      --blue-light:  #2558b8;
+      --accent:      #3b82f6;
+      --accent-glow: #60a5fa;
+      --teal:        #0ea5e9;
+      --white:       #ffffff;
+      --gray-200:    #e2e8f0;
+      --gray-400:    #94a3b8;
+      --gray-500:    #64748b;
+      --red:         #ef4444;
+      --radius:      12px;
+      --radius-sm:   8px;
     }
 
     html { scroll-behavior: smooth; }
 
     body {
-      background: var(--bg);
-      color: var(--text);
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 18px;
-      line-height: 1.85;
+      background: var(--blue-dark);
+      color: var(--white);
       min-height: 100vh;
+      line-height: 1.6;
     }
 
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      background: radial-gradient(ellipse 150% 100% at 50% 60%, #0c1f40 0%, #050d1a 100%);
       pointer-events: none;
       z-index: 0;
     }
 
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 0 2rem;
+    /* 點狀格線 */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(96,165,250,.032) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(96,165,250,.032) 1px, transparent 1px);
+      background-size: 56px 56px;
+    }
+
+    /* 粒子 Canvas */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* 滑鼠光圈 */
+    #cursor-glow {
+      position: fixed;
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59,130,246,.11) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+      transform: translate(-50%, -50%);
+      transition: left .06s linear, top .06s linear;
+      will-change: left, top;
+    }
+
+    /* Aurora 光暈球 */
+    .bg-blob {
+      position: fixed;
+      z-index: 0;
+      pointer-events: none;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--c) 0%, transparent 70%);
+      width: var(--w);
+      height: var(--h);
+      filter: blur(110px);
+      animation: blobFloat var(--dur) ease-in-out infinite alternate;
+    }
+
+    @keyframes blobFloat {
+      0%   { transform: translate(0,     0)    scale(1)    rotate(0deg);   }
+      20%  { transform: translate(40px, -50px) scale(1.07) rotate(5deg);   }
+      40%  { transform: translate(-25px, 35px) scale(.93)  rotate(-6deg);  }
+      60%  { transform: translate(50px,  28px) scale(1.05) rotate(8deg);   }
+      80%  { transform: translate(-35px,-22px) scale(.97)  rotate(-4deg);  }
+      100% { transform: translate(22px,  45px) scale(1.03) rotate(7deg);   }
+    }
+
+    /* 掃描光線 */
+    .scanline {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, rgba(96,165,250,.55) 50%, transparent 100%);
+      z-index: 1;
+      pointer-events: none;
+      animation: scanDown 10s ease-in-out infinite;
+      animation-delay: 2s;
+    }
+
+    @keyframes scanDown {
+      0%          { transform: translateY(-4px); opacity: 0; }
+      3%          { opacity: 1; }
+      97%         { opacity: .7; }
+      100%        { transform: translateY(100vh); opacity: 0; }
+    }
+
+    .page-wrap {
       position: relative;
       z-index: 1;
-    }
-
-    /* ANIMATIONS */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(32px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.7); }
-    }
-    @keyframes floatUp {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-10px); }
-    }
-    @keyframes borderGlow {
-      0%, 100% { border-color: #2a2a2a; }
-      50% { border-color: #9FE1CB44; }
-    }
-    @keyframes slideRight {
-      from { opacity: 0; transform: translateX(-20px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-
-    /* Hero load animations */
-    .fade { opacity: 0; }
-    .fade.visible { animation: fadeUp 0.75s cubic-bezier(0.22,1,0.36,1) both; }
-    .fade-1 { animation-delay: 0.05s; }
-    .fade-2 { animation-delay: 0.18s; }
-    .fade-3 { animation-delay: 0.32s; }
-    .fade-4 { animation-delay: 0.46s; }
-    .fade-5 { animation-delay: 0.60s; }
-
-    /* Scroll reveal */
-    .reveal {
-      opacity: 0;
-      transform: translateY(44px);
-      transition: opacity 0.75s cubic-bezier(0.22,1,0.36,1), transform 0.75s cubic-bezier(0.22,1,0.36,1);
-    }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-    .reveal-d1 { transition-delay: 0.08s; }
-    .reveal-d2 { transition-delay: 0.18s; }
-    .reveal-d3 { transition-delay: 0.28s; }
-
-    /* BRAND BAR */
-    .brand-bar {
-      background: var(--surface);
-      border-bottom: 0.5px solid var(--border);
-      padding: 14px 0;
-      text-align: center;
-      animation: fadeIn 0.5s ease both;
-    }
-    .brand-bar-inner {
-      max-width: 900px;
+      max-width: 680px;
       margin: 0 auto;
-      padding: 0 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 18px;
-    }
-    .brand-divider { width: 1px; height: 24px; background: var(--border); }
-    .brand-name {
-      font-family: 'Outfit', sans-serif;
-      font-weight: 800;
-      font-size: 1.35rem;
-      color: var(--accent);
-      letter-spacing: 0.1em;
-    }
-    .brand-sub {
-      font-size: 13px;
-      color: var(--muted);
-      letter-spacing: 0.05em;
+      padding: 40px 16px 64px;
     }
 
-    /* NAV */
-    nav {
-      padding: 1.4rem 0;
-      border-bottom: 0.5px solid var(--border);
-      position: sticky;
-      top: 0;
-      background: rgba(12,12,12,0.94);
-      backdrop-filter: blur(16px);
-      z-index: 100;
-      animation: fadeIn 0.5s ease both;
-    }
-    nav .inner {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 0 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .nav-logo {
-      font-family: 'Outfit', sans-serif;
-      font-weight: 800;
-      font-size: 1.05rem;
-      letter-spacing: 0.06em;
-      color: var(--accent);
-    }
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 28px;
-    }
-    .nav-link {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--muted);
-      text-decoration: none;
-      letter-spacing: 0.04em;
-      transition: color 0.2s;
-    }
-    .nav-link:hover { color: var(--text); }
-    .nav-cta {
-      background: var(--accent);
-      color: var(--accent-dark);
-      font-family: 'Outfit', sans-serif;
-      font-weight: 700;
-      font-size: 14px;
-      padding: 9px 24px;
-      border-radius: 100px;
-      border: none;
-      cursor: pointer;
-      text-decoration: none;
-      transition: transform 0.2s, opacity 0.2s;
-    }
-    .nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
-    @media (max-width: 640px) {
-      .nav-links { gap: 16px; }
-      .nav-link { display: none; }
-    }
+    /* ── Hero ── */
+    .hero { text-align: center; padding: 40px 0 36px; }
 
-    /* HERO */
-    .hero {
-      padding: 8rem 0 6rem;
-      text-align: center;
-      position: relative;
-    }
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: 8%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 700px;
-      height: 350px;
-      background: radial-gradient(ellipse, #7F77DD1c 0%, transparent 70%);
-      pointer-events: none;
-      animation: floatUp 7s ease-in-out infinite;
-    }
-    .hero-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent);
-      border: 0.5px solid #3DCCA055;
-      background: #9FE1CB0f;
-      border-radius: 100px;
-      padding: 7px 22px;
-      margin-bottom: 2.5rem;
-    }
-    .hero-tag::before {
-      content: '';
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: pulse 2s ease-in-out infinite;
-    }
-    h1 {
-      font-family: 'Outfit', sans-serif;
-      font-size: clamp(3rem, 7.5vw, 5rem);
-      font-weight: 800;
-      line-height: 1.06;
-      letter-spacing: -0.02em;
-      margin-bottom: 2rem;
-    }
-    h1 .accent { color: var(--accent); }
-    h1 .dim { color: var(--muted); }
-
-    .hero-sub {
-      font-size: 1.25rem;
-      color: var(--muted);
-      max-width: 580px;
-      margin: 0 auto 3rem;
-      line-height: 1.9;
-    }
-    .hero-badges {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 3.5rem;
-    }
-    .badge {
-      font-size: 14px;
-      padding: 8px 18px;
-      border-radius: 100px;
-      border: 0.5px solid var(--border);
-      color: var(--muted);
-      background: var(--surface);
-      transition: border-color 0.2s, color 0.2s, transform 0.2s;
-    }
-    .badge:hover { border-color: #444; color: var(--text); transform: translateY(-2px); }
-
-    .hero-cta {
+    .hero-badge {
       display: inline-block;
-      background: var(--accent);
-      color: var(--accent-dark);
-      font-family: 'Outfit', sans-serif;
-      font-weight: 800;
-      font-size: 18px;
-      padding: 20px 52px;
-      border-radius: 100px;
-      text-decoration: none;
-      transition: transform 0.25s, box-shadow 0.25s;
-      box-shadow: 0 0 40px #9FE1CB28;
-      animation: floatUp 4s ease-in-out infinite 1.2s;
-    }
-    .hero-cta:hover {
-      transform: translateY(-4px) scale(1.02);
-      box-shadow: 0 0 80px #9FE1CB50;
-    }
-
-    /* SECTIONS */
-    .section {
-      padding: 6rem 0;
-      border-top: 0.5px solid var(--border);
-    }
-    .section-label {
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 0.8rem;
-    }
-    .section-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: clamp(1.8rem, 3.5vw, 2.5rem);
-      font-weight: 800;
-      margin-bottom: 3rem;
-      line-height: 1.2;
-    }
-
-    /* OUTCOMES */
-    .outcomes-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-    }
-    .outcome-card {
-      background: var(--surface);
-      border: 0.5px solid var(--border);
-      border-radius: 18px;
-      padding: 2.4rem 2rem;
-      position: relative;
-      overflow: hidden;
-      transition: border-color 0.35s, transform 0.35s;
-      animation: borderGlow 5s ease-in-out infinite;
-    }
-    .outcome-card:nth-child(2) { animation-delay: 1.6s; }
-    .outcome-card:nth-child(3) { animation-delay: 3.2s; }
-    .outcome-card:hover { border-color: #9FE1CB66; transform: translateY(-5px); }
-    .outcome-card::after {
-      content: attr(data-num);
-      position: absolute;
-      top: -12px; right: 14px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 6rem;
-      font-weight: 800;
-      color: #ffffff05;
-      line-height: 1;
-      pointer-events: none;
-    }
-    .outcome-icon { font-size: 2.4rem; margin-bottom: 1.3rem; display: block; }
-    .outcome-card h3 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin-bottom: 0.7rem;
-    }
-    .outcome-card p { font-size: 15px; color: var(--muted); line-height: 1.75; }
-
-    /* GAMES SHOWCASE */
-    .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-    .game-card {
-      background: var(--surface);
-      border: 0.5px solid var(--border);
-      border-radius: 18px;
-      overflow: hidden;
-      transition: border-color 0.35s, transform 0.35s;
-    }
-    .game-card:hover { border-color: #9FE1CB55; transform: translateY(-5px); }
-    .game-preview {
-      background: var(--surface2);
-      border-bottom: 0.5px solid var(--border);
-      padding: 3rem 2rem;
-      text-align: center;
-      font-size: 4rem;
-    }
-    .game-info { padding: 1.8rem; }
-    .game-tag {
-      font-size: 11px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .72rem;
       font-weight: 600;
-      letter-spacing: 0.12em;
+      letter-spacing: .12em;
       text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 0.6rem;
-    }
-    .game-info h3 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.3rem;
-      font-weight: 800;
-      margin-bottom: 0.7rem;
-    }
-    .game-info p { font-size: 14px; color: var(--muted); line-height: 1.75; margin-bottom: 1.4rem; }
-    .game-btn {
-      display: inline-block;
-      background: var(--accent);
-      color: var(--accent-dark);
-      font-family: 'Outfit', sans-serif;
-      font-weight: 700;
-      font-size: 14px;
-      padding: 10px 26px;
-      border-radius: 100px;
-      text-decoration: none;
-      transition: transform 0.2s, opacity 0.2s;
-    }
-    .game-btn:hover { opacity: 0.85; transform: translateY(-2px); }
-
-    /* SCHEDULE */
-    .schedule-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-    .day-block {
-      background: var(--surface);
-      border: 0.5px solid var(--border);
-      border-radius: 18px;
-      overflow: hidden;
-      transition: transform 0.3s, border-color 0.3s;
-    }
-    .day-block:hover { transform: translateY(-4px); border-color: #3a3a3a; }
-    .day-header {
-      padding: 1.5rem 1.8rem;
-      border-bottom: 0.5px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-    .day-pill {
-      font-family: 'Outfit', sans-serif;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
+      color: var(--accent-glow);
+      background: rgba(59,130,246,.15);
+      border: 1px solid rgba(59,130,246,.35);
       padding: 5px 14px;
       border-radius: 100px;
+      margin-bottom: 18px;
     }
-    .day1 { background: var(--purple-bg); color: var(--purple); border: 0.5px solid #AFA9EC44; }
-    .day2 { background: var(--teal-bg); color: var(--teal); border: 0.5px solid #5DCAA544; }
-    .day-subtitle { font-size: 15px; color: var(--muted); }
-    .session { padding: 1.5rem 1.8rem; border-bottom: 0.5px solid var(--border); }
-    .session:last-child { border-bottom: none; }
-    .session-time { font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
-    .session-name { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-    .session-desc { font-size: 14px; color: var(--muted); line-height: 1.65; }
 
-    /* TOOLS */
-    .tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-    .tool-card {
-      background: var(--surface);
-      border: 0.5px solid var(--border);
-      border-radius: 14px;
-      padding: 1.4rem 1.6rem;
+    .hero h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 700;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #fff 30%, var(--accent-glow) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+      animation: titlePulse 5s ease-in-out infinite;
+    }
+
+    @keyframes titlePulse {
+      0%, 100% { filter: drop-shadow(0 0 0px rgba(96,165,250,0)); }
+      50%       { filter: drop-shadow(0 0 28px rgba(96,165,250,.35)); }
+    }
+
+    .hero p { color: var(--gray-400); font-size: .92rem; max-width: 440px; margin: 0 auto; }
+
+    .hero-tools {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .tool-chip {
       display: flex;
       align-items: center;
-      gap: 16px;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-    .tool-card:hover { border-color: #3a3a3a; transform: translateX(5px); }
-    .tool-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-    .dot-purple { background: #7F77DD; box-shadow: 0 0 10px #7F77DD55; }
-    .dot-teal   { background: #1D9E75; box-shadow: 0 0 10px #1D9E7555; }
-    .dot-amber  { background: #EF9F27; box-shadow: 0 0 10px #EF9F2755; }
-    .dot-blue   { background: #378ADD; box-shadow: 0 0 10px #378ADD55; }
-    .tool-name { font-size: 16px; font-weight: 700; }
-    .tool-use  { font-size: 13px; color: var(--muted); margin-top: 3px; }
-
-    /* DETAIL SCHEDULE */
-    .detail-block { margin-bottom: 3.2rem; }
-    .detail-day-header { display: flex; align-items: center; gap: 14px; margin-bottom: 1.4rem; flex-wrap: wrap; }
-    .detail-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.15rem;
-      font-weight: 700;
-    }
-    .step-list {
-      list-style: none;
-      border-left: 2px solid var(--border);
-      padding-left: 2rem;
-    }
-    .step-item {
-      padding: 1.1rem 0;
-      border-bottom: 0.5px solid var(--border);
-      transition: padding-left 0.25s;
-    }
-    .step-item:last-child { border-bottom: none; }
-    .step-item:hover { padding-left: 8px; }
-    .step-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
-    .step-time { font-size: 13px; color: var(--accent); font-weight: 700; min-width: 68px; flex-shrink: 0; }
-    .step-name { font-size: 16px; font-weight: 700; }
-    .step-desc { font-size: 14px; color: var(--muted); margin-left: 80px; line-height: 1.7; }
-
-    /* CTA */
-    .cta-section {
-      padding: 7rem 0;
-      text-align: center;
-      border-top: 0.5px solid var(--border);
-    }
-    .cta-section h2 {
-      font-family: 'Outfit', sans-serif;
-      font-size: clamp(2.2rem, 5vw, 3.5rem);
-      font-weight: 800;
-      line-height: 1.15;
-      margin-bottom: 1.3rem;
-    }
-    .cta-section p { color: var(--muted); font-size: 18px; margin-bottom: 3rem; }
-    .cta-group { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
-    .btn-primary {
-      background: var(--accent);
-      color: var(--accent-dark);
-      font-family: 'Outfit', sans-serif;
-      font-weight: 800;
-      font-size: 18px;
-      padding: 20px 52px;
+      gap: 6px;
+      font-size: .75rem;
+      color: var(--accent-glow);
+      background: rgba(59,130,246,.1);
+      border: 1px solid rgba(59,130,246,.25);
+      padding: 4px 10px;
       border-radius: 100px;
-      border: none;
-      cursor: pointer;
-      text-decoration: none;
-      transition: transform 0.25s, box-shadow 0.25s;
-      box-shadow: 0 0 40px #9FE1CB22;
     }
-    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 0 70px #9FE1CB50; }
-    .btn-secondary {
-      background: transparent;
-      color: var(--muted);
-      font-family: 'Outfit', sans-serif;
+
+    /* ── Card ── */
+    .card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: var(--radius);
+      backdrop-filter: blur(12px);
+      padding: 28px 24px;
+      margin-bottom: 20px;
+      transition: border-color .35s, box-shadow .35s;
+    }
+
+    .card:hover {
+      border-color: rgba(96,165,250,.22);
+      box-shadow: 0 0 40px rgba(59,130,246,.08), inset 0 1px 0 rgba(255,255,255,.07);
+    }
+
+    @media (min-width: 520px) { .card { padding: 32px 32px; } }
+
+    .card-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .95rem;
       font-weight: 600;
-      font-size: 18px;
-      padding: 20px 40px;
-      border-radius: 100px;
-      border: 0.5px solid var(--border);
+      color: var(--accent-glow);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 16px;
+      background: linear-gradient(180deg, var(--accent), var(--teal));
+      border-radius: 2px;
+    }
+
+    .card-note {
+      background: rgba(14,165,233,.1);
+      border: 1px solid rgba(14,165,233,.25);
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      font-size: .82rem;
+      color: #7dd3fc;
+      margin-bottom: 20px;
+      line-height: 1.55;
+    }
+
+    /* ── Fields ── */
+    .field { margin-bottom: 20px; }
+    .field:last-child { margin-bottom: 0; }
+
+    .field.hidden { display: none; }
+
+    label.field-label {
+      display: block;
+      font-size: .875rem;
+      font-weight: 500;
+      color: var(--gray-200);
+      margin-bottom: 7px;
+    }
+
+    .required-mark { color: var(--accent); margin-left: 2px; }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    select,
+    textarea {
+      width: 100%;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius-sm);
+      color: var(--white);
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: .9375rem;
+      padding: 11px 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      -webkit-appearance: none;
+    }
+
+    input::placeholder, textarea::placeholder { color: var(--gray-400); }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      background: rgba(255,255,255,.09);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.2);
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 38px;
       cursor: pointer;
-      text-decoration: none;
-      transition: border-color 0.2s, color 0.2s;
     }
-    .btn-secondary:hover { border-color: #555; color: var(--text); }
 
-    /* FOOTER */
-    footer {
-      padding: 2.5rem 0;
-      border-top: 0.5px solid var(--border);
+    select option { background: var(--blue-mid); }
+
+    textarea { resize: vertical; min-height: 96px; }
+
+    /* ── Radio / Checkbox ── */
+    .radio-group, .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .radio-item, .checkbox-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .radio-item input[type="radio"],
+    .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      margin-top: 1px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .radio-item span, .checkbox-item span {
+      font-size: .88rem;
+      color: var(--gray-200);
+      line-height: 1.5;
+    }
+
+    .section-divider {
+      height: 1px;
+      background: rgba(255,255,255,.07);
+      margin: 4px 0 22px;
+    }
+
+    /* ── Field error ── */
+    .field-error {
+      display: none;
+      font-size: .78rem;
+      color: #f87171;
+      margin-top: 5px;
+    }
+
+    .field.has-error input,
+    .field.has-error select,
+    .field.has-error textarea { border-color: var(--red); }
+
+    .field.has-error .field-error { display: block; }
+
+    /* ── Parent section ── */
+    #parent-card { display: none; }
+    #parent-card.visible { display: block; }
+
+    .minor-banner {
+      background: rgba(245,158,11,.1);
+      border: 1px solid rgba(245,158,11,.28);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: .82rem;
+      color: #fcd34d;
+      margin-bottom: 20px;
+    }
+
+    /* ── Privacy box ── */
+    .privacy-box {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-size: .8rem;
+      color: var(--gray-400);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .privacy-box strong { color: var(--gray-200); font-weight: 500; }
+
+    /* ── Submit ── */
+    .btn-submit {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--blue-light), var(--teal));
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(37,88,184,.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      opacity: .9;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(37,88,184,.55);
+    }
+
+    .btn-submit:disabled { opacity: .65; cursor: not-allowed; }
+
+    .spinner {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    .btn-submit.loading .spinner { display: block; }
+    .btn-submit.loading .btn-text { opacity: .7; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Banners ── */
+    #error-banner, #dup-banner {
+      display: none;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: .875rem;
       text-align: center;
-      font-size: 14px;
-      color: var(--muted);
+      margin-top: 14px;
     }
 
-    @media (max-width: 640px) {
-      body { font-size: 16px; }
-      h1 { font-size: 2.5rem; }
-      .hero { padding: 5rem 0 4rem; }
-      .hero-sub { font-size: 1.1rem; }
-      .outcomes-grid { grid-template-columns: 1fr; }
-      .games-grid { grid-template-columns: 1fr; }
-      .schedule-wrapper { grid-template-columns: 1fr; }
-      .tools-grid { grid-template-columns: 1fr; }
-      .step-desc { margin-left: 0; margin-top: 6px; }
+    #error-banner { background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.35); color: #fca5a5; }
+    #dup-banner   { background: rgba(245,158,11,.13); border: 1px solid rgba(245,158,11,.35); color: #fcd34d; }
+
+    #error-banner.visible, #dup-banner.visible { display: block; }
+
+    /* ── Success ── */
+    #success-screen { display: none; text-align: center; padding: 52px 16px; }
+    #success-screen.visible { display: block; }
+    #form-wrapper.hidden { display: none; }
+
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      animation: popIn .5s cubic-bezier(.34,1.56,.64,1) both;
     }
+
+    @keyframes popIn { from { transform: scale(.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    #success-screen h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff, var(--accent-glow));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+
+    .success-info {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin: 20px auto;
+      max-width: 380px;
+      text-align: left;
+    }
+
+    .success-info p { font-size: .88rem; color: var(--gray-200); margin-bottom: 6px; }
+    .success-info p:last-child { margin-bottom: 0; }
+    .success-info strong { color: var(--white); }
+
+    .success-tip { font-size: .82rem; color: var(--gray-400); margin-top: 14px; line-height: 1.7; }
+
+    footer { text-align: center; color: var(--gray-500); font-size: .75rem; padding-top: 16px; }
   </style>
 </head>
 <body>
 
-  <div class="brand-bar">
-    <div class="brand-bar-inner">
-      <span class="brand-name">千日文理教育</span>
-      <div class="brand-divider"></div>
-      <span class="brand-sub">Vibe Coding Camp 特別企劃</span>
+<!-- ── 背景特效層 ───────────────────────────────── -->
+<canvas id="bg-canvas"></canvas>
+<div id="cursor-glow"></div>
+<div class="scanline"></div>
+<!-- Aurora 光暈：深藍 / 青藍 / 紫 / 青 -->
+<div class="bg-blob" style="--c:rgba(37,99,235,.6);   --w:750px; --h:640px; --dur:17s; top:-22%; left:-18%;"></div>
+<div class="bg-blob" style="--c:rgba(14,165,233,.48); --w:640px; --h:560px; --dur:21s; bottom:-22%; right:-12%;"></div>
+<div class="bg-blob" style="--c:rgba(109,40,217,.38); --w:560px; --h:480px; --dur:25s; top:28%;  right:-10%;"></div>
+<div class="bg-blob" style="--c:rgba(6,182,212,.38);  --w:500px; --h:420px; --dur:14s; top:62%;  left:-12%;"></div>
+
+<div class="page-wrap">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">免費線上工作坊</div>
+    <h1>Vibe Coding Camp</h1>
+    <p>用 AI 工具打造你的第一個作品，完全免費、線上進行。</p>
+    <div class="hero-tools">
+      <span class="tool-chip">✦ Claude</span>
+      <span class="tool-chip">✦ Replit</span>
+      <span class="tool-chip">✦ Discord</span>
     </div>
   </div>
 
-  <nav>
-    <div class="inner">
-      <div class="nav-logo">VIBE CODING CAMP</div>
-      <div class="nav-links">
-        <a href="game.html" class="nav-link" target="_blank">試玩遊戲</a>
-        <a href="website.html" class="nav-link" target="_blank">作品範例</a>
-        <a href="#signup" class="nav-cta">立即報名</a>
-      </div>
+  <!-- Success Screen -->
+  <div id="success-screen">
+    <div class="success-icon"></div>
+    <h2>報名成功！</h2>
+    <p style="color:var(--gray-400);font-size:.95rem">我們已收到你的報名資料</p>
+    <div class="success-info">
+      <p>姓名：<strong id="s-name"></strong></p>
+      <p>Email：<strong id="s-email"></strong></p>
     </div>
-  </nav>
+    <p class="success-tip">
+       確認信已寄至你的信箱，請記得查收（含垃圾信件夾）<br/>
+      活動前請完成 Claude、Replit、Discord 三個帳號的註冊<br/>
+      如有問題歡迎透過Line私訊主辦團隊
+      Line ID 0968817509
+    </p>
+  </div>
 
-  <section class="hero">
-    <div class="container">
-      <div class="hero-tag fade fade-1">2天密集工作坊・線上進行</div>
-      <h1 class="fade fade-2">
-        不會寫程式，<br>
-        <span class="accent">也能做出</span><br>
-        <span class="dim">自己的遊戲</span>
-      </h1>
-      <p class="hero-sub fade fade-3">
-        用 AI 工具在兩天內完成一款遊戲、一支 Reel、一個真實上線的作品集網站。帶著連結離開，不需要任何程式基礎。
-      </p>
-      <div class="hero-badges fade fade-4">
-        <span class="badge">📅 2天 4堂課</span>
-        <span class="badge">💻 線上進行</span>
-        <span class="badge">🎓 適合在校學生</span>
-        <span class="badge">✨ 使用 2種以上 AI 工具</span>
-        <span class="badge">🌐 成品真實上線</span>
+  <!-- Form Wrapper -->
+  <div id="form-wrapper">
+    <form id="signup-form" novalidate>
+
+      <!-- 01 基本資料 -->
+      <div class="card">
+        <div class="card-title">01 &nbsp;基本資料</div>
+
+        <div class="field" id="f-name">
+          <label class="field-label" for="name">姓名 <span class="required-mark">*</span></label>
+          <input type="text" id="name" placeholder="王小明" autocomplete="name" />
+          <div class="field-error">請填寫姓名</div>
+        </div>
+
+        <div class="field" id="f-email">
+          <label class="field-label" for="email">電子信箱 <span class="required-mark">*</span></label>
+          <input type="email" id="email" placeholder="example@gmail.com" autocomplete="email" />
+          <div class="field-error">請填寫有效的電子信箱</div>
+        </div>
+
+        <div class="field" id="f-phone">
+          <label class="field-label" for="phone">手機號碼 <span class="required-mark">*</span></label>
+          <input type="tel" id="phone" placeholder="09xxxxxxxx" inputmode="numeric" maxlength="10" autocomplete="tel" />
+          <div class="field-error">請填寫台灣手機號碼（09 開頭共 10 碼）</div>
+        </div>
+
+        <div class="field" id="f-status">
+          <label class="field-label" for="status">就讀狀態 <span class="required-mark">*</span></label>
+          <select id="status">
+            <option value="">請選擇</option>
+            <option value="國小生">國小生</option>
+            <option value="國中生">國中生</option>
+            <option value="高中生">高中生</option>
+            <option value="大學生">大學生</option>
+            <option value="已出社會">已出社會</option>
+            <option value="其他">其他</option>
+          </select>
+          <div class="field-error">請選擇就讀狀態</div>
+        </div>
+
+        <!-- 條件顯示：就讀學校 -->
+        <div class="field hidden" id="f-school">
+          <label class="field-label" for="school">就讀學校 <span class="required-mark">*</span></label>
+          <input type="text" id="school" placeholder="○○國小 / 國中 / 高中 / 大學" />
+          <div class="field-error">請填寫就讀學校</div>
+        </div>
+
+        <!-- 條件顯示：年級 -->
+        <div class="field hidden" id="f-grade">
+          <label class="field-label" for="grade">年級 <span class="required-mark">*</span></label>
+          <select id="grade">
+            <option value="">請先選擇就讀狀態</option>
+          </select>
+          <div class="field-error">請選擇年級</div>
+        </div>
       </div>
-      <a href="#signup" class="hero-cta fade fade-5">立即報名 →</a>
-    </div>
-  </section>
 
-  <section class="section">
-    <div class="container">
-      <div class="section-label reveal">你會帶走什麼</div>
-      <h2 class="section-title reveal reveal-d1">結業時，三個真實成品</h2>
-      <div class="outcomes-grid">
-        <div class="outcome-card reveal reveal-d1" data-num="01">
-          <span class="outcome-icon">🎮</span>
-          <h3>AI 製作的遊戲</h3>
-          <p>用兩種以上的 AI 工具製作，有公開連結、可以分享給任何人玩</p>
+      <!-- 02 帳號準備 -->
+      <div class="card">
+        <div class="card-title">02 &nbsp;帳號準備狀態</div>
+        <div class="card-note">
+           本次活動使用的所有工具均為<strong>免費</strong>，請於活動前完成註冊。<br/>
+          claude.ai &nbsp;·&nbsp; replit.com &nbsp;·&nbsp; Discord
         </div>
-        <div class="outcome-card reveal reveal-d2" data-num="02">
-          <span class="outcome-icon">🎬</span>
-          <h3>遊戲 Reel 影片</h3>
-          <p>30–60 秒的遊戲展示影片，剪輯完成可直接發 Instagram / TikTok</p>
-        </div>
-        <div class="outcome-card reveal reveal-d3" data-num="03">
-          <span class="outcome-icon">🌐</span>
-          <h3>作品集網站</h3>
-          <p>包含遊戲連結、Reel 影片、遊戲介紹的個人作品頁面，真實部署上線</p>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <section class="section">
-    <div class="container">
-      <div class="section-label reveal">學生實際成品</div>
-      <h2 class="section-title reveal reveal-d1">這是學生在兩天內做出的遊戲</h2>
-      <div class="games-grid">
-        <div class="game-card reveal reveal-d1">
-          <div class="game-preview">🚀</div>
-          <div class="game-info">
-            <div class="game-tag">太空射擊遊戲</div>
-            <h3>Space Shooter</h3>
-            <p>五個完整關卡、粒子爆炸特效、炸彈清場技能、第三關解鎖三叉彈。支援手機觸控，使用 Claude + Cursor 製作。</p>
-            <a href="https://qian0307.github.io/aigame/" target="_blank" rel="noopener" class="game-btn">▶ 立即試玩</a>
+        <div class="field" id="f-claude">
+          <label class="field-label">Claude 帳號（claude.ai） <span class="required-mark">*</span></label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="claude" value="已有帳號" /><span>已有帳號</span></label>
+            <label class="radio-item"><input type="radio" name="claude" value="沒有，我會在活動前註冊" /><span>沒有，我會在活動前註冊</span></label>
+            <label class="radio-item"><input type="radio" name="claude" value="不知道是什麼" /><span>不知道是什麼</span></label>
           </div>
+          <div class="field-error">請選擇 Claude 帳號狀態</div>
         </div>
-        <div class="game-card reveal reveal-d2">
-          <div class="game-preview">🎯</div>
-          <div class="game-info">
-            <div class="game-tag">第一人稱射擊 FPS</div>
-            <h3>Neural Strike</h3>
-            <p>第一人稱視角、波次制敵人、WASD 移動加滑鼠瞄準、換彈機制，完整的沉浸式 FPS 戰鬥體驗。</p>
-            <a href="https://qian0307.github.io/neural-strike/" target="_blank" rel="noopener" class="game-btn">▶ 立即試玩</a>
+
+        <div class="section-divider"></div>
+
+        <div class="field" id="f-replit">
+          <label class="field-label">Replit 帳號（replit.com） <span class="required-mark">*</span></label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="replit" value="已有帳號" /><span>已有帳號</span></label>
+            <label class="radio-item"><input type="radio" name="replit" value="沒有，我會在活動前註冊" /><span>沒有，我會在活動前註冊</span></label>
+            <label class="radio-item"><input type="radio" name="replit" value="不知道是什麼" /><span>不知道是什麼</span></label>
           </div>
+          <div class="field-error">請選擇 Replit 帳號狀態</div>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <section class="section">
-    <div class="container">
-      <div class="section-label reveal">課程安排</div>
-      <h2 class="section-title reveal reveal-d1">兩天，四堂課</h2>
-      <div class="schedule-wrapper">
-        <div class="day-block reveal reveal-d1">
-          <div class="day-header">
-            <span class="day-pill day1">DAY 1</span>
-            <span class="day-subtitle">遊戲 × 影片</span>
+        <div class="section-divider"></div>
+
+        <div class="field" id="f-discord">
+          <label class="field-label">Discord 帳號 <span class="required-mark">*</span></label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="discord" value="已有帳號" /><span>已有帳號</span></label>
+            <label class="radio-item"><input type="radio" name="discord" value="沒有，我會在活動前註冊" /><span>沒有，我會在活動前註冊</span></label>
+            <label class="radio-item"><input type="radio" name="discord" value="不知道是什麼" /><span>不知道是什麼</span></label>
           </div>
-          <div class="session">
-            <div class="session-time">堂 1・上午</div>
-            <div class="session-name">AI 工具全覽 ＋ 遊戲製作實戰</div>
-            <div class="session-desc">工具設置、Prompt 技巧、用第一種 AI 生成遊戲雛形</div>
+          <div class="field-error">請選擇 Discord 帳號狀態</div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field" id="f-device">
+          <label class="field-label">使用裝置類型 <span class="required-mark">*</span></label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="device" value="Windows" /><span>Windows 電腦</span></label>
+            <label class="radio-item"><input type="radio" name="device" value="Mac" /><span>Mac</span></label>
+            <label class="radio-item"><input type="radio" name="device" value="Chromebook" /><span>Chromebook</span></label>
+            <label class="radio-item"><input type="radio" name="device" value="平板" /><span>平板（iPad / Android）</span></label>
+            <label class="radio-item"><input type="radio" name="device" value="其他" /><span>其他</span></label>
           </div>
-          <div class="session">
-            <div class="session-time">堂 2・下午</div>
-            <div class="session-name">第二種 AI ＋ 遊戲完成 ＋ Reel 製作</div>
-            <div class="session-desc">發布遊戲取得連結、錄影剪輯教學、完成 Reel demo</div>
+          <div class="field-error">請選擇使用裝置</div>
+        </div>
+      </div>
+
+      <!-- 03 活動相關 -->
+      <div class="card">
+        <div class="card-title">03 &nbsp;活動相關</div>
+
+        <div class="field" id="f-coding">
+          <label class="field-label">過去有無程式基礎 <span class="required-mark">*</span></label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="coding" value="無" /><span>無——完全沒碰過程式</span></label>
+            <label class="radio-item"><input type="radio" name="coding" value="略懂（會一點）" /><span>略懂——上過幾堂課，或自己玩過</span></label>
+            <label class="radio-item"><input type="radio" name="coding" value="有（寫過專案）" /><span>有——曾獨立完成過程式專案</span></label>
           </div>
+          <div class="field-error">請選擇程式基礎</div>
         </div>
-        <div class="day-block reveal reveal-d2">
-          <div class="day-header">
-            <span class="day-pill day2">DAY 2</span>
-            <span class="day-subtitle">網站 × 上線</span>
+
+        <div class="section-divider"></div>
+
+        <div class="field" id="f-source">
+          <label class="field-label">得知活動管道 <span class="required-mark">*</span>（可複選）</label>
+          <div class="checkbox-group">
+            <label class="checkbox-item"><input type="checkbox" name="source" value="IG" /><span>IG</span></label>
+            <label class="checkbox-item"><input type="checkbox" name="source" value="Threads" /><span>Threads</span></label>
+            <label class="checkbox-item"><input type="checkbox" name="source" value="朋友介紹" /><span>朋友介紹</span></label>
+            <label class="checkbox-item"><input type="checkbox" name="source" value="學校公告" /><span>學校公告</span></label>
+            <label class="checkbox-item"><input type="checkbox" name="source" value="其他" /><span>其他</span></label>
           </div>
-          <div class="session">
-            <div class="session-time">堂 3・上午</div>
-            <div class="session-name">Vibe Coding 網站製作</div>
-            <div class="session-desc">用自然語言讓 AI 寫網站、嵌入遊戲連結與影片</div>
-          </div>
-          <div class="session">
-            <div class="session-time">堂 4・下午</div>
-            <div class="session-name">文案 ＋ 美化 ＋ 部署上線 ＋ Demo 展示</div>
-            <div class="session-desc">AI 輔助寫介紹文、網站美化、Netlify 部署、成果發表</div>
-          </div>
+          <div class="field-error">請至少勾選一項</div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field">
+          <label class="field-label" for="motivation">參加動機／期待學到什麼（選填）</label>
+          <textarea id="motivation" placeholder="例如：想學做遊戲、對 AI 好奇、想增加作品集…"></textarea>
         </div>
       </div>
-    </div>
-  </section>
 
-  <section class="section">
-    <div class="container">
-      <div class="section-label reveal">工具清單</div>
-      <h2 class="section-title reveal reveal-d1">課程會用到的 AI 工具</h2>
-      <div class="tools-grid">
-        <div class="tool-card reveal reveal-d1">
-          <div class="tool-dot dot-purple"></div>
-          <div><div class="tool-name">OpenAI Codex</div><div class="tool-use">遊戲製作 — AI 工具 #1</div></div>
+      <!-- 04 家長同意（條件顯示） -->
+      <div class="card" id="parent-card">
+        <div class="card-title">04 &nbsp;家長同意</div>
+        <div class="minor-banner">
+           就讀國小／國中／高中的同學，請填寫家長資料。
         </div>
-        <div class="tool-card reveal reveal-d2">
-          <div class="tool-dot dot-teal"></div>
-          <div><div class="tool-name">Claude</div><div class="tool-use">遊戲強化 ＋ 網站 Vibe Coding</div></div>
+
+        <div class="field" id="f-parentName">
+          <label class="field-label" for="parentName">家長姓名 <span class="required-mark">*</span></label>
+          <input type="text" id="parentName" placeholder="家長或監護人全名" />
+          <div class="field-error">請填寫家長姓名</div>
         </div>
-        <div class="tool-card reveal reveal-d1">
-          <div class="tool-dot dot-amber"></div>
-          <div><div class="tool-name">Cursor</div><div class="tool-use">AI 程式碼即時編輯環境</div></div>
+
+        <div class="field" id="f-parentPhone">
+          <label class="field-label" for="parentPhone">家長聯絡電話 <span class="required-mark">*</span></label>
+          <input type="tel" id="parentPhone" placeholder="09xxxxxxxx 或市話" />
+          <div class="field-error">請填寫家長聯絡電話</div>
         </div>
-        <div class="tool-card reveal reveal-d2">
-          <div class="tool-dot dot-blue"></div>
-          <div><div class="tool-name">Gemini 1.5 Pro</div><div class="tool-use">圖像理解 ＋ 輔助設計發想</div></div>
+
+        <div class="field" id="f-parentConsent">
+          <label class="field-label">家長同意聲明 <span class="required-mark">*</span></label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="parentConsent" />
+            <span>本人（家長／監護人）已閱讀活動說明，同意子女參加本次線上活動</span>
+          </label>
+          <div class="field-error">請勾選家長同意聲明</div>
         </div>
       </div>
-    </div>
-  </section>
 
-  <section class="section">
-    <div class="container">
-      <div class="section-label reveal">詳細教學流程</div>
-      <h2 class="section-title reveal reveal-d1">每堂課你會做什麼</h2>
+      <!-- 05 個資與條款 -->
+      <div class="card">
+        <div class="card-title">05 &nbsp;個資告知與條款</div>
 
-      <div class="detail-block reveal">
-        <div class="detail-day-header">
-          <span class="day-pill day1">DAY 1・堂 1</span>
-          <span class="detail-title">AI 工具全覽 ＋ 遊戲製作實戰（約 2.5 小時）</span>
+        <div class="privacy-box">
+          <strong>千日教育依個人資料保護法第 8 條告知以下事項：</strong><br/>
+          （1）蒐集目的：活動報名、通知及名單管理；<br/>
+          （2）資料類別：姓名、電子信箱、手機、就讀資訊；<br/>
+          （3）利用期間：活動結束後 6 個月，屆期刪除；<br/>
+          （4）您可依法申請查閱、複製、更正或刪除個人資料，請聯繫主辦方。
         </div>
-        <ul class="step-list">
-          <li class="step-item"><div class="step-header"><span class="step-time">15 min</span><span class="step-name">開場與 Vibe Coding 概念</span></div><p class="step-desc">什麼是 vibe coding？AI 輔助創作的思維與正確期待</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">20 min</span><span class="step-name">工具環境設置</span></div><p class="step-desc">帳號申請、介面導覽、確保每個人都準備好</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">30 min</span><span class="step-name">Prompt 技巧核心課</span></div><p class="step-desc">怎麼跟 AI 說清楚你要什麼，壞 prompt vs 好 prompt 對比示範</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">60 min</span><span class="step-name">遊戲製作實作</span></div><p class="step-desc">用第一種 AI 工具從零生成遊戲雛形，老師示範後學生跟做</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">15 min</span><span class="step-name">Q&amp;A ＋ 課後作業</span></div><p class="step-desc">想好自己遊戲的主題，截圖存好雛形</p></li>
-        </ul>
-      </div>
 
-      <div class="detail-block reveal">
-        <div class="detail-day-header">
-          <span class="day-pill day1">DAY 1・堂 2</span>
-          <span class="detail-title">第二種 AI ＋ 完成遊戲 ＋ Reel 製作（約 3 小時）</span>
+        <div class="field" id="f-privacy">
+          <label class="checkbox-item">
+            <input type="checkbox" id="privacyConsent" />
+            <span>我已閱讀上方個資告知內容，同意千日教育依法蒐集、處理及利用個人資料 <span class="required-mark">*</span></span>
+          </label>
+          <div class="field-error">請同意個資蒐集</div>
         </div>
-        <ul class="step-list">
-          <li class="step-item"><div class="step-header"><span class="step-time">15 min</span><span class="step-name">複習與學生展示</span></div><p class="step-desc">每人分享昨天的遊戲雛形進度</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">40 min</span><span class="step-name">AI 工具 #2 介紹與操作</span></div><p class="step-desc">第二種工具的特性、如何與第一種搭配使用強化遊戲</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">45 min</span><span class="step-name">遊戲完成與發布</span></div><p class="step-desc">測試調整、用 AI 修 bug、取得遊戲公開連結</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">20 min</span><span class="step-name">錄影教學</span></div><p class="step-desc">螢幕錄影工具設定、掌握鏡頭節奏技巧</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">40 min</span><span class="step-name">Reel 剪輯實作</span></div><p class="step-desc">CapCut 操作或 AI 影片工具，剪出 30–60 秒的 demo 影片</p></li>
-        </ul>
-      </div>
 
-      <div class="detail-block reveal">
-        <div class="detail-day-header">
-          <span class="day-pill day2">DAY 2・堂 3</span>
-          <span class="detail-title">Vibe Coding 網站製作（約 2.5 小時）</span>
+        <div class="field" id="f-photo">
+          <label class="checkbox-item">
+            <input type="checkbox" id="photoConsent" />
+            <span>我同意活動期間的截圖、照片得由主辦方用於社群媒體及活動宣傳素材 <span class="required-mark">*</span></span>
+          </label>
+          <div class="field-error">請勾選照片授權同意</div>
         </div>
-        <ul class="step-list">
-          <li class="step-item"><div class="step-header"><span class="step-time">15 min</span><span class="step-name">網站結構說明</span></div><p class="step-desc">介紹最終作品集頁面的三區塊：遊戲連結、Reel 影片、遊戲介紹</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">20 min</span><span class="step-name">從模板開始</span></div><p class="step-desc">發放起始模板，不從空白開始，降低挫折感</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">60 min</span><span class="step-name">Vibe Coding 實作</span></div><p class="step-desc">用自然語言指令讓 AI 改版面、嵌入遊戲連結與 Reel 影片</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">20 min</span><span class="step-name">常見問題排除</span></div><p class="step-desc">看不懂程式碼也能修的方法：請 AI 解釋 → 再請 AI 修</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">15 min</span><span class="step-name">老師巡堂協助</span></div><p class="step-desc">個人進度調整，處理卡關問題</p></li>
-        </ul>
-      </div>
 
-      <div class="detail-block reveal">
-        <div class="detail-day-header">
-          <span class="day-pill day2">DAY 2・堂 4</span>
-          <span class="detail-title">文案 ＋ 美化 ＋ 上線 ＋ Demo 展示（約 3 小時）</span>
+        <div class="field" id="f-rules">
+          <label class="checkbox-item">
+            <input type="checkbox" id="rulesRead" />
+            <span>我已閱讀活動注意事項，同意遵守相關規定 <span class="required-mark">*</span></span>
+          </label>
+          <div class="field-error">請確認已閱讀注意事項</div>
         </div>
-        <ul class="step-list">
-          <li class="step-item"><div class="step-header"><span class="step-time">30 min</span><span class="step-name">Text Wall 撰寫</span></div><p class="step-desc">用 AI 輔助生成遊戲介紹，學生只需填入關鍵字即可產出完整文案</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">40 min</span><span class="step-name">網站美化</span></div><p class="step-desc">顏色、字體、排版調整，讓網站有個人風格</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">30 min</span><span class="step-name">Netlify 部署上線</span></div><p class="step-desc">一鍵部署流程教學，取得個人網站的真實公開連結</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">30 min</span><span class="step-name">最終調整時間</span></div><p class="step-desc">自由優化，老師協助收尾所有未完成的部分</p></li>
-          <li class="step-item"><div class="step-header"><span class="step-time">30 min</span><span class="step-name">Demo 展示發表</span></div><p class="step-desc">每人 2–3 分鐘展示遊戲 ＋ 網站，互相給予回饋，拍照留念</p></li>
-        </ul>
       </div>
-    </div>
-  </section>
 
-  <section class="cta-section" id="signup">
-    <div class="container">
-      <h2 class="reveal">你的作品，<span style="color:var(--accent)">兩天後上線</span></h2>
-      <p class="reveal reveal-d1">不需要任何程式基礎。帶一台電腦，帶一個 idea。</p>
-      <div class="cta-group reveal reveal-d2">
-        <a href="#signup" class="btn-primary">立即報名 →</a>
-        <a href="website.html" target="_blank" class="btn-secondary">看作品範例</a>
-      </div>
-    </div>
-  </section>
+      <!-- Submit -->
+      <button type="submit" class="btn-submit" id="submit-btn">
+        <span class="spinner"></span>
+        <span class="btn-text">送出報名表單</span>
+      </button>
 
-  <footer>
-    <div class="container">
-      <p>千日文理教育 &nbsp;·&nbsp; Vibe Coding Camp &nbsp;·&nbsp; 兩天做出你的第一個遊戲</p>
-    </div>
-  </footer>
+      <div id="dup-banner">此 Email 已完成報名，請勿重複送出。如有問題請聯繫主辦方。</div>
+      <div id="error-banner"></div>
 
-  <script>
-    document.querySelectorAll('.hero .fade').forEach(el => el.classList.add('visible'));
+    </form>
+  </div>
 
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('visible');
-          io.unobserve(e.target);
-        }
+  <footer><p>Vibe Coding Camp &copy; 千日教育 &nbsp;·&nbsp; 如有疑問請Line私訊主辦團隊</p></footer>
+</div>
+
+<script>
+  // ── 設定 ──────────────────────────────────────────
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwnJ9jeLHcrooB32diCmTTcjoPEAOBbllqefnbXkzVfq2xZDMPjF1El7miOE-xdoPUS/exec'; // ← 填入 Web App URL
+
+  // ── 常數 ──────────────────────────────────────────
+  const STUDENT_STATUSES = ['國小生','國中生','高中生','大學生'];
+  const MINOR_STATUSES   = ['國小生','國中生','高中生'];
+  const GRADE_MAP = {
+    '國小生': ['一年級','二年級','三年級','四年級','五年級','六年級'],
+    '國中生': ['七年級','八年級','九年級'],
+    '高中生': ['高一','高二','高三'],
+    '大學生': ['大一','大二','大三','大四'],
+  };
+
+  // ── 就讀狀態邏輯 ───────────────────────────────────
+  document.getElementById('status').addEventListener('change', handleStatusChange);
+
+  function handleStatusChange() {
+    const status    = document.getElementById('status').value;
+    const isStudent = STUDENT_STATUSES.includes(status);
+    const isMinor   = MINOR_STATUSES.includes(status);
+
+    toggle('f-school', isStudent);
+    toggle('f-grade',  isStudent);
+    document.getElementById('parent-card').classList.toggle('visible', isMinor);
+
+    if (isStudent) {
+      const gradeEl = document.getElementById('grade');
+      const opts    = GRADE_MAP[status] || [];
+      gradeEl.innerHTML = '<option value="">請選擇年級</option>' +
+        opts.map(o => `<option value="${o}">${o}</option>`).join('');
+    }
+  }
+
+  function toggle(id, show) {
+    document.getElementById(id).classList.toggle('hidden', !show);
+  }
+
+  // ── 驗證 ──────────────────────────────────────────
+  const radio  = n => (document.querySelector(`input[name="${n}"]:checked`) || {}).value || '';
+  const chk    = id => document.getElementById(id)?.checked;
+  const val    = id => (document.getElementById(id)?.value || '').trim();
+  const checkboxVals = n =>
+    [...document.querySelectorAll(`input[name="${n}"]:checked`)].map(c => c.value).join('、');
+
+  function setError(id, show) {
+    document.getElementById(id)?.classList.toggle('has-error', show);
+  }
+
+  function clearErrors() {
+    document.querySelectorAll('.field.has-error').forEach(f => f.classList.remove('has-error'));
+    document.getElementById('error-banner').classList.remove('visible');
+    document.getElementById('dup-banner').classList.remove('visible');
+  }
+
+  function validate() {
+    let ok = true;
+    const status    = val('status');
+    const isStudent = STUDENT_STATUSES.includes(status);
+    const isMinor   = MINOR_STATUSES.includes(status);
+
+    const rules = [
+      ['f-name',    !val('name')],
+      ['f-email',   !val('email') || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val('email'))],
+      ['f-phone',   !/^09\d{8}$/.test(val('phone'))],
+      ['f-status',  !status],
+      ['f-school',  isStudent && !val('school')],
+      ['f-grade',   isStudent && !val('grade')],
+      ['f-claude',  !radio('claude')],
+      ['f-replit',  !radio('replit')],
+      ['f-discord', !radio('discord')],
+      ['f-device',  !radio('device')],
+      ['f-coding',  !radio('coding')],
+      ['f-source',  !checkboxVals('source')],
+      ['f-parentName',    isMinor && !val('parentName')],
+      ['f-parentPhone',   isMinor && !val('parentPhone')],
+      ['f-parentConsent', isMinor && !chk('parentConsent')],
+      ['f-privacy', !chk('privacyConsent')],
+      ['f-photo',   !chk('photoConsent')],
+      ['f-rules',   !chk('rulesRead')],
+    ];
+
+    rules.forEach(([id, bad]) => { setError(id, bad); if (bad) ok = false; });
+    return ok;
+  }
+
+  // ── Live error clear ───────────────────────────────
+  document.getElementById('signup-form').addEventListener('input', e => {
+    e.target.closest('.field')?.classList.remove('has-error');
+  });
+  document.getElementById('signup-form').addEventListener('change', e => {
+    e.target.closest('.field')?.classList.remove('has-error');
+  });
+
+  // ── Submit ─────────────────────────────────────────
+  document.getElementById('signup-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    clearErrors();
+
+    if (!validate()) {
+      document.querySelector('.field.has-error')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const status  = val('status');
+    const isMinor = MINOR_STATUSES.includes(status);
+
+    const payload = {
+      name:          val('name'),
+      email:         val('email'),
+      phone:         val('phone'),
+      status,
+      school:        val('school'),
+      grade:         val('grade'),
+      claude:        radio('claude'),
+      replit:        radio('replit'),
+      discord:       radio('discord'),
+      device:        radio('device'),
+      coding:        radio('coding'),
+      source:        checkboxVals('source'),
+      motivation:    val('motivation'),
+      parentName:    isMinor ? val('parentName')       : '',
+      parentPhone:   isMinor ? val('parentPhone')      : '',
+      parentConsent: isMinor ? chk('parentConsent')    : false,
+      privacyConsent: chk('privacyConsent'),
+      photoConsent:   chk('photoConsent'),
+      rulesRead:      chk('rulesRead'),
+    };
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.querySelector('.btn-text').textContent = '送出中…';
+
+    try {
+      const res  = await fetch(SCRIPT_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body:    JSON.stringify(payload),
       });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
-    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
-  </script>
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+
+      if (json.status === 'duplicate') {
+        document.getElementById('dup-banner').classList.add('visible');
+        document.getElementById('dup-banner').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      if (json.status !== 'success') throw new Error(json.message || '伺服器回傳錯誤');
+
+      document.getElementById('s-name').textContent  = payload.name;
+      document.getElementById('s-email').textContent = payload.email;
+      document.getElementById('form-wrapper').classList.add('hidden');
+      document.getElementById('success-screen').classList.add('visible');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (err) {
+      const msg = err.message && err.message !== 'Failed to fetch'
+        ? `送出失敗：${err.message}`
+        : '網路連線異常，請確認網路後再試一次。若問題持續，請截圖聯絡主辦方。';
+
+      const banner = document.getElementById('error-banner');
+      banner.textContent = msg;
+      banner.classList.add('visible');
+      banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    } finally {
+      if (document.getElementById('form-wrapper').offsetParent !== null) {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        btn.querySelector('.btn-text').textContent = '重新送出';
+      }
+    }
+  });
+</script>
+
+<!-- ── 粒子網絡特效 ────────────────────────────── -->
+<script>
+(function () {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx    = canvas.getContext('2d');
+  const glow   = document.getElementById('cursor-glow');
+  let W, H, particles = [];
+  let mouse = { x: -9999, y: -9999 };
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  const COLORS = [
+    [210, 75, 68],   // 藍
+    [195, 80, 65],   // 青藍
+    [270, 65, 68],   // 紫
+    [185, 70, 62],   // 青
+  ];
+
+  class Particle {
+    constructor() { this.init(); }
+    init() {
+      this.x  = Math.random() * W;
+      this.y  = Math.random() * H;
+      this.vx = (Math.random() - .5) * .38;
+      this.vy = (Math.random() - .5) * .38;
+      this.r  = Math.random() * 1.3 + .45;
+      const [h, s, l] = COLORS[Math.floor(Math.random() * COLORS.length)];
+      this.color = `hsl(${h},${s}%,${l}%)`;
+      this.alpha = Math.random() * .5 + .15;
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      const dx = this.x - mouse.x, dy = this.y - mouse.y;
+      const d  = Math.hypot(dx, dy);
+      if (d < 100 && d > 0) {
+        this.x += (dx / d) * (100 - d) * .025;
+        this.y += (dy / d) * (100 - d) * .025;
+      }
+      if (this.x < -10) this.x = W + 10;
+      if (this.x > W + 10) this.x = -10;
+      if (this.y < -10) this.y = H + 10;
+      if (this.y > H + 10) this.y = -10;
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.color.replace(')', `,${this.alpha})`).replace('hsl', 'hsla');
+      ctx.fill();
+    }
+  }
+
+  function initParticles() {
+    particles = [];
+    const isMobile = W < 768;
+    const n = isMobile
+      ? Math.min(Math.round(W * H / 18000), 55)
+      : Math.min(Math.round(W * H / 13000), 90);
+    for (let i = 0; i < n; i++) particles.push(new Particle());
+  }
+
+  function drawConnections() {
+    const MAX_D = 140;
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const d  = Math.hypot(dx, dy);
+        if (d < MAX_D) {
+          const a = (1 - d / MAX_D) * .24;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(96,165,250,${a})`;
+          ctx.lineWidth   = .55;
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    drawConnections();
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+    if (glow) { glow.style.left = e.clientX + 'px'; glow.style.top = e.clientY + 'px'; }
+  });
+
+  window.addEventListener('touchmove', e => {
+    mouse.x = e.touches[0].clientX;
+    mouse.y = e.touches[0].clientY;
+  }, { passive: true });
+
+  window.addEventListener('resize', () => { resize(); initParticles(); });
+
+  resize();
+  initParticles();
+  frame();
+})();
+</script>
 </body>
 </html>
