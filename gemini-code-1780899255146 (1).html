@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VALORANT 3D：無縫連線與夜露 Boss 版</title>
+    <style>
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; background-color: #0b0e14; color: #fff; user-select: none; }
+        #gameCanvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; }
+        
+        /* 介面基本樣式 */
+        .panel { position: absolute; z-index: 10; background: rgba(15, 25, 35, 0.9); border: 2px solid #ff4655; padding: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.8); backdrop-filter: blur(5px); box-sizing: border-box; }
+        h2, h3 { border-bottom: 2px solid #ff4655; padding-bottom: 6px; margin: 0 0 10px 0; color: #ff4655; font-size: 16px; letter-spacing: 1px; }
+        
+        /* 1. 房間代碼初始選單 */
+        #roomMenuOverlay { position: absolute; top:0; left:0; width:100vw; height:100vh; background: #0a0e14; z-index: 200; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .menu-box { background: #1f2326; border: 2px solid #ff4655; padding: 30px; width: 400px; text-align: center; box-shadow: 0 0 30px rgba(255,70,85,0.2); }
+        .menu-input { width: 80%; padding: 10px; font-size: 18px; text-align: center; background: #101418; border: 1px solid #444; color: #fff; margin: 15px 0; letter-spacing: 2px; }
+        .menu-btn { background: #ff4655; color: #fff; padding: 10px 25px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; margin: 5px; width: 85%; }
+        .menu-btn.secondary { background: #34495e; }
+        .menu-btn:hover { opacity: 0.9; background: #ece8e1; color: #111; }
+
+        /* 遊戲內即時切換自身角色的控制面板 */
+        .hero-switcher { display: flex; gap: 8px; margin-top: 10px; }
+        .hero-mini-btn { background: #222; border: 1px solid #444; color: #ccc; padding: 6px 10px; font-size: 12px; cursor: pointer; font-weight: bold; flex-grow: 1; text-align: center; }
+        .hero-mini-btn.active { background: #ff4655; border-color: #ff4655; color: #fff; }
+        .hero-mini-btn.disabled { opacity: 0.3; cursor: not-allowed; border-color: #111; }
+        
+        /* 遊戲內 UI 佈局 */
+        .left-panel { top: 20px; left: 20px; width: 320px; }
+        .right-panel { top: 20px; right: 20px; width: 320px; height: calc(100vh - 40px); display: flex; flex-direction: column; gap: 15px; }
+        .log-box { width: 100%; flex-grow: 1; background: rgba(0,0,0,0.6); padding: 8px; overflow-y: auto; font-family: monospace; font-size: 11px; color: #ccc; box-sizing: border-box; line-height: 1.6; border: 1px solid #333; }
+        
+        .stat-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; font-size: 14px; }
+        .plus-btn { background: #ffd700; color: #000; border: none; width: 24px; height: 24px; font-weight: bold; cursor: pointer; text-align: center; line-height: 24px; font-size: 16px; }
+        
+        .center-ui { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 10; width: 450px; background: rgba(15, 25, 35, 0.95); padding: 15px; border: 1px solid #ff4655; text-align: center; }
+        .skills-grid { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .skill-btn { background: #34495e; color: white; border: 1px solid #555; padding: 8px 12px; font-size: 12px; cursor: pointer; font-weight: bold; }
+        .skill-btn:disabled { background: #222; color: #666; cursor: not-allowed; }
+
+        .progress-container { width: 100%; background: #222; padding: 2px; box-sizing: border-box; margin: 5px 0; border: 1px solid #444; }
+        .progress-fill { height: 16px; background: #ff4655; width: 100%; transition: width 0.1s; text-align: center; font-size: 11px; line-height: 16px; font-weight: bold; color: #fff; }
+        
+        .floating-damage { position: absolute; font-weight: 900; font-size: 32px; text-shadow: 2px 2px 0px #000; pointer-events: none; animation: floatUp 0.5s ease-out forwards; z-index: 99; }
+        @keyframes floatUp { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; } 100% { transform: translate(-50%, -180%) scale(1.2); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<!-- 1. 房間代碼初始選單 -->
+<div id="roomMenuOverlay">
+    <div class="menu-box">
+        <h1 style="color: #ff4655; margin: 0 0 20px 0; font-size: 24px; letter-spacing: 2px;">VALORANT ROOMS</h1>
+        <p style="color: #aaa; font-size: 14px;">建立專屬房間，或輸入代碼與隊友連線</p>
+        
+        <button class="menu-btn" onclick="createRoom()">➕ 建立新房間 (隨機代碼)</button>
+        
+        <div style="margin: 20px 0; border-top: 1px solid #444; position: relative;">
+            <span style="background: #1f2326; padding: 0 10px; position: absolute; top: -12px; left: 42%; color: #666; font-size: 12px;">或者</span>
+        </div>
+
+        <input type="text" id="roomCodeInput" class="menu-input" placeholder="請輸入 5 碼房間代碼" maxlength="5">
+        <button class="menu-btn secondary" onclick="joinRoom()">🔌 加入現有房間</button>
+    </div>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<!-- 2. 左側面板 -->
+<div class="panel left-panel">
+    <h2>🎮 房號：<span id="uiRoomCodeDisplay" style="color: #ff4655;">-----</span></h2>
+    <div class="stat-row">🎖️ <b>當前關卡：</b> <span id="uiStage" style="color:#ff4655; font-weight:bold;">第 1 關</span></div>
+    
+    <h3 style="margin-top:15px;">👤 即時更換我的角色</h3>
+    <div class="hero-switcher">
+        <button id="sm-jett" class="hero-mini-btn active" onclick="selectMyHero('jett')">Jett</button>
+        <button id="sm-sova" class="hero-mini-btn" onclick="selectMyHero('sova')">Sova</button>
+        <button id="sm-reyna" class="hero-mini-btn" onclick="selectMyHero('reyna')">Reyna</button>
+        <button id="sm-sage" class="hero-mini-btn" onclick="selectMyHero('sage')">Sage</button>
+    </div>
+
+    <h3 style="margin-top:15px;">📊 屬性統計配點</h3>
+    <div class="stat-row">🌟 <b>可用點數：</b> <span id="uiStatPoints" style="color:#ffd700; font-weight:bold;">5</span></div>
+    <div class="stat-row">
+        <div>⚔️ <b>近戰力量</b> (Lv.<span id="lvlMelee">1</span>)</div>
+        <button class="plus-btn" onclick="addStat('melee')">+</button>
+    </div>
+    <div class="stat-row">
+        <div>🛡️ <b>防禦能力</b> (Lv.<span id="lvlDefense">1</span>)</div>
+        <button class="plus-btn" onclick="addStat('defense')">+</button>
+    </div>
+    
+    <hr style="border:0; border-top:1px solid #333; margin: 10px 0;">
+    <div class="stat-row">❤️ <b>隊伍總生命值：</b></div>
+    <div class="progress-container">
+        <div id="teamHpBar" class="progress-fill" style="background:#2ecc71;">HP: 2000 / 2000</div>
+    </div>
+</div>
+
+<!-- 3. 中央底部：技能發動與怪獸狀態 -->
+<div class="center-ui">
+    <h3 id="uiMonsterName">👹 菲尼克斯</h3>
+    <div class="progress-container">
+        <div id="monsterHpBar" class="progress-fill">HP: 300/300</div>
+    </div>
+    
+    <div class="skills-grid">
+        <button id="btnSkill1" class="skill-btn" onclick="useSkill(1)">🗡️ [1] 颶刃飛鏢</button>
+        <button id="btnSkill2" class="skill-btn" onclick="useSkill(2)">⚡ [2] 順風衝刺</button>
+    </div>
+</div>
+
+<!-- 4. 右側面板 -->
+<div class="panel right-panel">
+    <div>
+        <h2>👥 連線成員 (<span id="uiUserCount">1</span>/4)</h2>
+        <div id="uiUserList" style="font-size:12px; color:#00ffcc; line-height: 1.8;"></div>
+    </div>
+    <div class="log-container" style="flex-grow:1; display:flex; flex-direction:column;">
+        <h2>📜 戰場實時連線日誌</h2>
+        <div class="log-box" id="gameLog"></div>
+    </div>
+</div>
+
+<script>
+// --- 基礎核心變數 ---
+let canvas, ctx;
+let stage = 1;
+let gameActive = false;
+let currentRoomCode = "";
+
+// 連線數據
+let myHeroType = 'jett'; 
+let connectedPlayers = []; 
+
+// 屬性配點
+let stats = { points: 5, melee: 1, defense: 1 };
+let teamHp = 2000;
+let teamMaxHp = 2000;
+
+// 怪物數據
+let monster = { name: "菲尼克斯", hp: 300, maxHp: 300, x: 2.2, y: -0.2, z: 0, size: 1.0, isYoruBoss: false };
+
+// 敵人致盲計時器
+let bossBlindTimer = 0;
+
+// 四位角色的 3D 專屬定位坐標
+let heroes = {
+    jett:  { name: "無", x: -1.0, y: -0.2, z: 0, targetX: -1.0, state: 'idle', color: '#5ca9a6', hair: '#ffffff', joined: false, isMe: false },
+    sova:  { name: "無", x: -2.2, y: -0.1, z: -1.2, targetX: -2.2, state: 'idle', color: '#3498db', hair: '#f1c40f', joined: false, isMe: false },
+    reyna: { name: "無", x: -2.2, y: -0.1, z: 1.2, targetX: -2.2, state: 'idle', color: '#9b59b6', hair: '#8e44ad', joined: false, isMe: false },
+    sage:  { name: "無", x: -3.4, y: 0.0, z: 0, targetX: -3.4, state: 'idle', color: '#2ecc71', hair: '#1abc9c', joined: false, isMe: false }
+};
+
+let projectiles = []; 
+let cd = { skill1: 0, skill2: 0 };
+
+// --- 房間代碼系統 ---
+function generateCode() {
+    let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for(let i=0; i<5; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+    return code;
+}
+
+function createRoom() { 
+    currentRoomCode = generateCode(); 
+    enterBattleground(); 
+}
+
+function joinRoom() {
+    let input = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+    if(input.length !== 5) { alert("請輸入完整的 5 碼房間代碼！"); return; }
+    currentRoomCode = input; 
+    enterBattleground();
+}
+
+// 【核心修復點】進入戰場時，確保強制計算畫布與更新 UI 房號
+function enterBattleground() {
+    document.getElementById('roomMenuOverlay').style.display = 'none';
+    document.getElementById('uiRoomCodeDisplay').innerText = currentRoomCode;
+    gameActive = true;
+
+    // 重新強制校正畫布解析度，防卡死
+    resizeCanvas();
+
+    connectedPlayers = [{ name: "你", hero: myHeroType, isMe: true }];
+    
+    // 清空舊日誌並寫入新開房資訊
+    document.getElementById('gameLog').innerHTML = "";
+    log(`🏠 成功開通房間代碼 [${currentRoomCode}]。你已無縫進入戰場！`);
+    log(`⏳ 戰場已同步開啟，等待其他隊友輸入代碼動態瞬移加入...`);
+
+    syncPlayersTo3DScene();
+    setupSkillButtons();
+    checkMonsterSpawn(); 
+    updateUI();
+    updateBars();
+    startSimulatingPlayers();
+}
+
+function selectMyHero(heroType) {
+    if (!gameActive) return;
+    let taken = connectedPlayers.some(p => !p.isMe && p.hero === heroType);
+    if(taken) { log(`❌ 更換失敗：${heroType.toUpperCase()} 目前正被其他在線玩家使用中！`); return; }
+    
+    connectedPlayers.forEach(p => { if(p.isMe) p.hero = heroType; });
+    myHeroType = heroType;
+    
+    syncPlayersTo3DScene();
+    setupSkillButtons();
+    
+    ['jett', 'sova', 'reyna', 'sage'].forEach(h => {
+        let btn = document.getElementById(`sm-${h}`);
+        if(h === heroType) btn.className = "hero-mini-btn active";
+        else {
+            let isOthers = connectedPlayers.some(p => !p.isMe && p.hero === h);
+            btn.className = isOthers ? "hero-mini-btn disabled" : "hero-mini-btn";
+        }
+    });
+}
+
+let playerSimTimer;
+function startSimulatingPlayers() {
+    if(playerSimTimer) clearInterval(playerSimTimer);
+    let fakeNames = ["AimKing", "Radiant_Sage", "TenzFan", "CarryMe"];
+    
+    playerSimTimer = setInterval(() => {
+        if(!gameActive || connectedPlayers.length >= 4) { clearInterval(playerSimTimer); return; }
+        
+        let availableHeroes = ['jett', 'sova', 'reyna', 'sage'].filter(h => !connectedPlayers.some(p => p.hero === h));
+        if(availableHeroes.length > 0) {
+            let nextHero = availableHeroes[Math.floor(Math.random() * availableHeroes.length)];
+            let nextName = fakeNames[Math.floor(Math.random() * fakeNames.length)] + `#${Math.floor(Math.random()*800+100)}`;
+            fakeNames = fakeNames.filter(n => !nextName.includes(n));
+            
+            connectedPlayers.push({ name: nextName, hero: nextHero, isMe: false });
+            log(`🔌 【實時連線】玩家 [${nextName}] 輸入代碼成功，已直接瞬移進入戰場位置！`);
+            
+            syncPlayersTo3DScene();
+            selectMyHero(myHeroType); 
+        }
+    }, 4000); 
+}
+
+function syncPlayersTo3DScene() {
+    document.getElementById('uiUserCount').innerText = connectedPlayers.length;
+    for(let k in heroes) heroes[k].joined = false;
+    
+    let listHtml = "";
+    connectedPlayers.forEach(p => {
+        heroes[p.hero].joined = true;
+        heroes[p.hero].name = p.isMe ? "你" : p.name;
+        heroes[p.hero].isMe = p.isMe;
+        listHtml += p.isMe ? `🟢 <b>${p.hero.toUpperCase()}</b> (你) - 戰鬥中<br>` : `🔵 <b>${p.hero.toUpperCase()}</b> (${p.name}) - 已同步在線<br>`;
+    });
+    document.getElementById('uiUserList').innerHTML = listHtml;
+}
+
+function setupSkillButtons() {
+    let b1 = document.getElementById('btnSkill1'); let b2 = document.getElementById('btnSkill2');
+    if(myHeroType === 'jett') { b1.innerText = "🗡️ [1] 颶刃飛鏢"; b2.innerText = "⚡ [2] 順風衝刺"; } 
+    else if(myHeroType === 'sova') { b1.innerText = "🏹 [1] 蓄力電箭"; b2.innerText = "⚡ [2] 獵鷹重擊"; } 
+    else if(myHeroType === 'reyna') { b1.innerText = "👁️ [1] 無情視線"; b2.innerText = "⚡ [2] 狂暴撕裂"; } 
+    else if(myHeroType === 'sage') { b1.innerText = "🟢 [1] 治癒之球"; b2.innerText = "⚡ [2] 寒冰牆控"; }
+}
+
+// --- 3D 投影與幾何繪製 ---
+function project3D(x, y, z) {
+    const fov = 420; const distance = 5.5; let sz = z + distance; if (sz <= 0) sz = 0.1;
+    return { x: (canvas.width * 0.5) + (x * fov / sz), y: (canvas.height * 0.55) - (y * fov / sz) };
+}
+
+function drawPolygon(points, color) {
+    if(!points || points.length < 3) return;
+    ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y);
+    for(let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+    ctx.closePath(); ctx.fill(); ctx.strokeStyle = "rgba(0,0,0,0.4)"; ctx.lineWidth = 1; ctx.stroke();
+}
+
+function drawMemeCharacter(x, y, z, color, hairColor, nameTag, size = 1.0, isEnemy = false) {
+    let s = size; let lookDir = isEnemy ? -1 : 1;
+    let tagPos = project3D(x, y + 0.9*s, z);
+    ctx.fillStyle = isEnemy ? "#ff4655" : "#00ffcc"; ctx.font = "bold 11px Arial"; ctx.textAlign = "center";
+    ctx.fillText(nameTag, tagPos.x, tagPos.y);
+
+    let head = [project3D(x - 0.2*s*lookDir, y + 0.6*s, z - 0.15*s), project3D(x + 0.2*s*lookDir, y + 0.6*s, z - 0.15*s), project3D(x + 0.25*s*lookDir, y + 0.2*s, z - 0.15*s), project3D(x - 0.25*s*lookDir, y + 0.2*s, z - 0.15*s)];
+    drawPolygon(head, "#f0cfb3");
+    let hair = [project3D(x - 0.22*s*lookDir, y + 0.6*s, z - 0.16*s), project3D(x, y + 0.8*s, z), project3D(x + 0.22*s*lookDir, y + 0.6*s, z - 0.16*s)];
+    drawPolygon(hair, hairColor);
+    let body = [project3D(x - 0.35*s, y + 0.1*s, z), project3D(x + 0.35*s, y + 0.1*s, z), project3D(x + 0.15*s, y - 0.5*s, z), project3D(x - 0.15*s, y - 0.5*s, z)];
+    drawPolygon(body, color);
+}
+
+// --- 渲染核心迴圈 ---
+function renderLoop() {
+    if (!ctx || !canvas) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (bossBlindTimer > 0) {
+        bossBlindTimer--;
+        ctx.fillStyle = "rgba(42, 12, 68, 0.2)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    ctx.strokeStyle = bossBlindTimer > 0 ? "rgba(155, 89, 182, 0.4)" : "rgba(255, 76, 85, 0.05)";
+    for(let i = -6; i <= 6; i += 1.5) {
+        let p1 = project3D(i, -0.6, -4); let p2 = project3D(i, -0.6, 4);
+        ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+    }
+
+    let me = heroes[myHeroType];
+    if (gameActive && me && me.state === 'dashing') {
+        me.x += 0.4;
+        if (me.x >= monster.x - 0.4) {
+            triggerHit(stats.melee * 120 + 200, `你突擊碰撞`);
+            me.state = 'returning';
+        }
+    } else if (gameActive && me && me.state === 'returning') {
+        me.x -= 0.3; if (me.x <= me.targetX) { me.x = me.targetX; me.state = 'idle'; }
+    }
+
+    if (gameActive) {
+        if (heroes.sage.joined) drawMemeCharacter(heroes.sage.x, heroes.sage.y, heroes.sage.z, heroes.sage.color, heroes.sage.hair, `Sage: ${heroes.sage.name}`, 0.95);
+        if (heroes.sova.joined) drawMemeCharacter(heroes.sova.x, heroes.sova.y, heroes.sova.z, heroes.sova.color, heroes.sova.hair, `Sova: ${heroes.sova.name}`, 0.95);
+        if (heroes.reyna.joined) drawMemeCharacter(heroes.reyna.x, heroes.reyna.y, heroes.reyna.z, heroes.reyna.color, heroes.reyna.hair, `Reyna: ${heroes.reyna.name}`, 0.95);
+        if (heroes.jett.joined) drawMemeCharacter(heroes.jett.x, heroes.jett.y, heroes.jett.z, heroes.jett.color, heroes.jett.hair, `Jett: ${heroes.jett.name}`, 1.0);
+    }
+
+    if (gameActive && monster.hp > 0) {
+        drawMemeCharacter(monster.x, monster.y, monster.z, monster.color, monster.hair, monster.name, monster.size, true);
+        if(monster.isYoruBoss && Math.random() < 0.003 && bossBlindTimer <= 0) {
+            bossBlindTimer = 90; 
+            log(`💀 夜露施展了【盲雷】！干擾了全隊的作戰視線！`);
+        }
+    }
+
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        let p = projectiles[i]; p.x += p.vx;
+        let pScreen = project3D(p.x, p.y, p.z);
+        ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(pScreen.x, pScreen.y, p.radius, 0, Math.PI*2); ctx.fill();
+
+        if (p.x >= monster.x - 0.2 && p.x <= monster.x + 0.5) {
+            triggerHit(p.dmg, p.label);
+            projectiles.splice(i, 1);
+        } else if (p.x > 5) { projectiles.splice(i, 1); }
+    }
+
+    if(cd.skill1 > 0) cd.skill1 -= 0.016; if(cd.skill2 > 0) cd.skill2 -= 0.016;
+    updateCoolDownUI();
+
+    if (gameActive && bossBlindTimer <= 0) runRoomTeammatesAi();
+
+    requestAnimationFrame(renderLoop);
+}
+
+function checkMonsterSpawn() {
+    if (stage % 10 === 0) {
+        monster.name = `⚠️ 小 Boss：夜露 (Yoru)`;
+        monster.maxHp = 400 + (stage * 160); 
+        monster.hp = monster.maxHp;
+        monster.size = 1.4; 
+        monster.color = "#1c2833"; 
+        monster.hair = "#2e4053"; 
+        monster.isYoruBoss = true;
+        log(`🚨 【BOSS 警告】第 ${stage} 關！小 Boss 夜露帶著傳送盲雷強勢降臨！`);
+    } else {
+        monster.name = `怪物：菲尼克斯`;
+        monster.maxHp = 250 + (stage * 70);
+        monster.hp = monster.maxHp;
+        monster.size = 1.0;
+        monster.color = "#e65c00";
+        monster.hair = "#ff6600";
+        monster.isYoruBoss = false;
+    }
+}
+
+function triggerHit(dmg, label) {
+    if (!gameActive || monster.hp <= 0) return;
+    
+    if (bossBlindTimer > 0) {
+        let meScreen = project3D(monster.x - 0.5, monster.y + 0.6, monster.z);
+        createFloatingText(`MISS`, meScreen.x, meScreen.y, "#9b59b6");
+        return;
+    }
+
+    if (monster.isYoruBoss && Math.random() < 0.20) {
+        monster.z = (Math.random() * 2.4) - 1.2; 
+        log(`✨ 夜露發動【不請自來】瞬間閃現，改變了防守站位！`);
+    }
+
+    monster.hp -= dmg;
+    let mScreen = project3D(monster.x, monster.y + 0.5, monster.z);
+    createFloatingText(`${dmg}`, mScreen.x, mScreen.y, "#ffd700");
+    log(`💥 [傷害共享] ${label} 輸出 ${dmg} 點！`);
+
+    if (monster.hp <= 0) {
+        monster.hp = 0;
+        nextStage();
+    }
+    updateBars();
+}
+
+function runRoomTeammatesAi() {
+    if (heroes.sova.joined && myHeroType !== 'sova' && Math.random() < 0.005) {
+        projectiles.push({ x: heroes.sova.x, y: heroes.sova.y+0.2, z: heroes.sova.z, vx: 0.15, color: '#3498db', radius: 5, dmg: 90, label: `Sova(${heroes.sova.name}) 的震盪電箭` });
+    }
+    if (heroes.reyna.joined && myHeroType !== 'reyna' && Math.random() < 0.004) {
+        triggerHit(110, `Reyna(${heroes.reyna.name}) 的瘋狂撕裂`);
+    }
+    if (heroes.sage.joined && myHeroType !== 'sage' && Math.random() < 0.003 && teamHp < teamMaxHp) {
+        teamHp = Math.min(teamMaxHp, teamHp + 150);
+        log(`🟢 隊友 【${heroes.sage.name}】 使用了全體治療！`);
+        updateBars();
+    }
+}
+
+function useSkill(skillNum) {
+    if (monster.hp <= 0 || !gameActive || bossBlindTimer > 0) return;
+    let actor = heroes[myHeroType];
+
+    if (skillNum === 1 && cd.skill1 <= 0) {
+        cd.skill1 = 1.2;
+        let dmg = 150 + (stats.melee * 20);
+        if(myHeroType === 'jett') { projectiles.push({ x: actor.x, y: actor.y+0.2, z: actor.z, vx: 0.2, color: '#e74c3c', radius: 4, dmg: dmg, label: "你釋放的 颶刃飛鏢" }); } 
+        else if(myHeroType === 'sova') { projectiles.push({ x: actor.x, y: actor.y+0.2, z: actor.z, vx: 0.18, color: '#3498db', radius: 6, dmg: dmg + 30, label: "你擊出的 蓄力電箭" }); } 
+        else if(myHeroType === 'reyna') { triggerHit(dmg + 20, "你施展的 視線痛擊"); } 
+        else if(myHeroType === 'sage') { teamHp = Math.min(teamMaxHp, teamHp + 400); log("🟢 你幫團隊治療了 400 點生命值！"); updateBars(); }
+    } 
+    else if (skillNum === 2 && cd.skill2 <= 0) {
+        cd.skill2 = 3.5;
+        if(myHeroType === 'jett') { actor.state = 'dashing'; } 
+        else { triggerHit(340 + stats.melee*30, "你的 核心終極技能"); }
+    }
+}
+
+function nextStage() {
+    if (monster.isYoruBoss) {
+        stats.points += 10;
+        log(`🎉 🏆 成功擊殺小 Boss 夜露！全隊獲得額外 +10 點天賦點數！`);
+    } else {
+        stats.points += 3;
+    }
+    stage++;
+    checkMonsterSpawn(); 
+    updateBars(); updateUI();
+}
+
+function addStat(type) {
+    if (stats.points > 0) {
+        stats.points--; stats[type]++;
+        if (type === 'defense') { teamMaxHp += 200; teamHp += 200; }
+        log(`📈 配點：【${type === 'melee' ? '近戰力量' : '防禦能力'}】成功提升！`);
+        updateUI(); updateBars();
+    }
+}
+
+function updateUI() {
+    document.getElementById('uiStatPoints').innerText = stats.points;
+    document.getElementById('lvlMelee').innerText = stats.melee;
+    document.getElementById('lvlDefense').innerText = stats.defense;
+    document.getElementById('uiMonsterName').innerText = monster.name;
+    document.getElementById('uiStage').innerText = `第 ${stage} 關`;
+}
+
+function updateBars() {
+    let mPct = (monster.hp / monster.maxHp) * 100;
+    document.getElementById('monsterHpBar').style.width = `${Math.max(0, mPct)}%`;
+    document.getElementById('monsterHpBar').innerText = `HP: ${monster.hp} / ${monster.maxHp}`;
+    let tPct = (teamHp / teamMaxHp) * 100;
+    document.getElementById('teamHpBar').style.width = `${Math.max(0, tPct)}%`;
+    document.getElementById('teamHpBar').innerText = `HP: ${teamHp} / ${teamMaxHp}`;
+}
+
+function updateCoolDownUI() {
+    let b1 = document.getElementById('btnSkill1');
+    if(b1 && cd.skill1 > 0) b1.innerText = `冷卻中 (${cd.skill1.toFixed(1)}s)`;
+}
+
+function createFloatingText(text, x, y, color) {
+    const div = document.createElement('div'); div.className = 'floating-damage';
+    div.style.left = `${x}px`; div.style.top = `${y}px`; div.style.color = color; div.innerText = text;
+    document.body.appendChild(div); setTimeout(() => div.remove(), 500);
+}
+
+function log(msg) {
+    let logBox = document.getElementById('gameLog');
+    if(logBox) { logBox.innerHTML += `<div>${msg}</div>`; logBox.scrollTop = logBox.scrollHeight; }
+}
+
+function resizeCanvas() {
+    if (canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+}
+
+window.addEventListener('keydown', (e) => {
+    if (e.key === '1') useSkill(1); if (e.key === '2') useSkill(2);
+});
+
+window.addEventListener('load', () => {
+    canvas = document.getElementById('gameCanvas'); 
+    ctx = canvas.getContext('2d');
+    window.addEventListener('resize', resizeCanvas); 
+    resizeCanvas();
+    renderLoop(); 
+});
+</script>
+
+</body>
+</html>
