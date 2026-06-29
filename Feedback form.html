@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<!--
+  Vibe Coding Camp — 課後回饋表單（淺色版）
+  ─────────────────────────────────────────────
+  部署說明：
+  1. 完成 Code.gs 的 Google Apps Script 部署（詳見 Code.gs 頂端或 README.md）
+  2. 取得 Web App URL 後，替換下方 JS 的 SCRIPT_URL
+  3. 用瀏覽器直接開啟此檔案即可使用
+  ─────────────────────────────────────────────
+-->
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vibe Coding Camp — 課後回饋表單</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f6f8fb;
+      --card:      #ffffff;
+      --border:    #e3e8ef;
+      --accent:    #2558b8;
+      --accent-2:  #1f4fa8;
+      --gold:      #f5a623;
+      --text:      #1f2937;
+      --muted:     #64748b;
+      --faint:     #94a3b8;
+      --red:       #dc2626;
+      --radius:    14px;
+      --radius-sm: 9px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .page-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 40px 16px 64px;
+    }
+
+    /* ── Hero ── */
+    .hero { text-align: center; padding: 32px 0 28px; }
+
+    .hero-badge {
+      display: inline-block;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: #eaf1fb;
+      border: 1px solid #d3e1f7;
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.8rem, 5.5vw, 2.6rem);
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+
+    .hero p { color: var(--muted); font-size: .92rem; max-width: 460px; margin: 0 auto; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 26px 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 1px 2px rgba(15,23,42,.04);
+    }
+
+    @media (min-width: 520px) { .card { padding: 30px 30px; } }
+
+    .card-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .95rem;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: .04em;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .card-title::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 16px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    .card-note {
+      background: #eef4fc;
+      border: 1px solid #dbe7f8;
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      font-size: .82rem;
+      color: var(--accent-2);
+      margin-bottom: 20px;
+      line-height: 1.55;
+    }
+
+    /* ── Fields ── */
+    .field { margin-bottom: 22px; }
+    .field:last-child { margin-bottom: 0; }
+
+    label.field-label {
+      display: block;
+      font-size: .875rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 9px;
+    }
+
+    .field-hint { font-size: .76rem; color: var(--faint); font-weight: 400; }
+
+    .required-mark { color: var(--accent); margin-left: 2px; }
+
+    input[type="text"],
+    input[type="email"],
+    select,
+    textarea {
+      width: 100%;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: .9375rem;
+      padding: 11px 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      -webkit-appearance: none;
+    }
+
+    input::placeholder, textarea::placeholder { color: var(--faint); }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,88,184,.14);
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 38px;
+      cursor: pointer;
+    }
+
+    textarea { resize: vertical; min-height: 92px; }
+
+    /* ── Star rating ── */
+    .star-rating { display: flex; gap: 6px; align-items: center; }
+    .star {
+      font-size: 2rem;
+      line-height: 1;
+      cursor: pointer;
+      color: #d7dde6;
+      transition: color .12s, transform .12s;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .star:hover { transform: scale(1.18); }
+    .star.active { color: var(--gold); }
+    .star-caption {
+      margin-left: 12px;
+      font-size: .82rem;
+      color: #c47f08;
+      min-width: 56px;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .star-caption.show { opacity: 1; }
+
+    /* ── Radio / Checkbox ── */
+    .radio-group, .checkbox-group { display: flex; flex-direction: column; gap: 10px; }
+
+    .radio-item, .checkbox-item { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+
+    .radio-item input[type="radio"],
+    .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      margin-top: 1px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .radio-item span, .checkbox-item span { font-size: .88rem; color: #334155; line-height: 1.5; }
+
+    .section-divider { height: 1px; background: var(--border); margin: 4px 0 22px; }
+
+    /* ── Field error ── */
+    .field-error { display: none; font-size: .78rem; color: var(--red); margin-top: 6px; }
+
+    .field.has-error input,
+    .field.has-error select,
+    .field.has-error textarea { border-color: var(--red); }
+
+    .field.has-error .field-error { display: block; }
+
+    /* ── Submit ── */
+    .btn-submit {
+      width: 100%;
+      padding: 15px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      cursor: pointer;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 2px 10px rgba(37,88,184,.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background: var(--accent-2);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(37,88,184,.3);
+    }
+
+    .btn-submit:disabled { opacity: .6; cursor: not-allowed; }
+
+    .spinner {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    .btn-submit.loading .spinner { display: block; }
+    .btn-submit.loading .btn-text { opacity: .7; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Banner ── */
+    #error-banner {
+      display: none;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: .875rem;
+      text-align: center;
+      margin-top: 14px;
+      background: #fdecec;
+      border: 1px solid #f6caca;
+      color: #b91c1c;
+    }
+    #error-banner.visible { display: block; }
+
+    /* ── Success ── */
+    #success-screen { display: none; text-align: center; padding: 56px 16px; }
+    #success-screen.visible { display: block; }
+    #form-wrapper.hidden { display: none; }
+
+    #success-screen h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .success-tip { font-size: .85rem; color: var(--muted); margin-top: 18px; line-height: 1.8; }
+
+    footer { text-align: center; color: var(--faint); font-size: .75rem; padding-top: 16px; }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">課後回饋 · 約 2 分鐘</div>
+    <h1>謝謝你的參與</h1>
+    <p>你的回饋是我們下一梯做得更好的關鍵。誠實一點沒關係，我們想聽真話。</p>
+  </div>
+
+  <!-- Success Screen -->
+  <div id="success-screen">
+    <h2>回饋已送出！</h2>
+    <p style="color:var(--muted);font-size:.95rem">謝謝你花時間填寫，每一句都有人看</p>
+    <p class="success-tip">
+      期待在下一場 Vibe Coding Camp 再見到你<br/>
+      記得把今晚做的遊戲與作品集分享給朋友<br/>
+      有任何想法都歡迎隨時 Line 私訊主辦團隊
+    </p>
+  </div>
+
+  <!-- Form Wrapper -->
+  <div id="form-wrapper">
+    <form id="feedback-form" novalidate>
+
+      <!-- 01 基本資料 -->
+      <div class="card">
+        <div class="card-title">01 &nbsp;基本資料</div>
+
+        <div class="field" id="f-name">
+          <label class="field-label" for="name">姓名或暱稱 <span class="required-mark">*</span></label>
+          <input type="text" id="name" placeholder="王小明 / 小明" autocomplete="name" />
+          <div class="field-error">請填寫姓名或暱稱</div>
+        </div>
+
+        <div class="field" id="f-email">
+          <label class="field-label" for="email">電子信箱 <span class="field-hint">（選填，方便我們後續聯繫你）</span></label>
+          <input type="email" id="email" placeholder="example@gmail.com" autocomplete="email" />
+          <div class="field-error">電子信箱格式不正確</div>
+        </div>
+
+        <div class="field" id="f-batch">
+          <label class="field-label" for="batch">你參加的梯次 <span class="required-mark">*</span></label>
+          <select id="batch">
+            <option value="">請選擇</option>
+            <option value="7/3（四）梯次一">7/3（四）梯次一</option>
+            <option value="7/4（五）梯次二">7/4（五）梯次二</option>
+            <option value="不記得了">不記得了</option>
+          </select>
+          <div class="field-error">請選擇參加的梯次</div>
+        </div>
+      </div>
+
+      <!-- 02 整體評價 -->
+      <div class="card">
+        <div class="card-title">02 &nbsp;整體評價</div>
+
+        <div class="field" id="f-overall" data-star="overall">
+          <label class="field-label">整體滿意度 <span class="required-mark">*</span></label>
+          <div class="star-rating">
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+            <span class="star" data-value="4">★</span>
+            <span class="star" data-value="5">★</span>
+            <span class="star-caption"></span>
+          </div>
+          <input type="hidden" id="overall" />
+          <div class="field-error">請給整體滿意度評分</div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field" id="f-recommend">
+          <label class="field-label">你有多願意把這個工作坊推薦給朋友？ <span class="required-mark">*</span></label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="recommend" value="非常願意，已經想拉人來了" /><span>非常願意，已經想拉人來了</span></label>
+            <label class="radio-item"><input type="radio" name="recommend" value="會推薦" /><span>會推薦</span></label>
+            <label class="radio-item"><input type="radio" name="recommend" value="看對方需求" /><span>看對方需求才推薦</span></label>
+            <label class="radio-item"><input type="radio" name="recommend" value="不太會推薦" /><span>不太會推薦</span></label>
+          </div>
+          <div class="field-error">請選擇推薦意願</div>
+        </div>
+      </div>
+
+      <!-- 03 各環節評分 -->
+      <div class="card">
+        <div class="card-title">03 &nbsp;各環節評分</div>
+        <div class="card-note">1 顆星＝很不滿意，5 顆星＝非常滿意。憑直覺點就好。</div>
+
+        <div class="field" id="f-rateContent" data-star="rateContent">
+          <label class="field-label">課程內容的實用度 <span class="required-mark">*</span></label>
+          <div class="star-rating">
+            <span class="star" data-value="1">★</span><span class="star" data-value="2">★</span><span class="star" data-value="3">★</span><span class="star" data-value="4">★</span><span class="star" data-value="5">★</span>
+            <span class="star-caption"></span>
+          </div>
+          <input type="hidden" id="rateContent" />
+          <div class="field-error">請評分</div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field" id="f-rateInstructor" data-star="rateInstructor">
+          <label class="field-label">講師教學的清晰度 <span class="required-mark">*</span></label>
+          <div class="star-rating">
+            <span class="star" data-value="1">★</span><span class="star" data-value="2">★</span><span class="star" data-value="3">★</span><span class="star" data-value="4">★</span><span class="star" data-value="5">★</span>
+            <span class="star-caption"></span>
+          </div>
+          <input type="hidden" id="rateInstructor" />
+          <div class="field-error">請評分</div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field" id="f-ratePace" data-star="ratePace">
+          <label class="field-label">課程節奏與時間安排 <span class="required-mark">*</span></label>
+          <div class="star-rating">
+            <span class="star" data-value="1">★</span><span class="star" data-value="2">★</span><span class="star" data-value="3">★</span><span class="star" data-value="4">★</span><span class="star" data-value="5">★</span>
+            <span class="star-caption"></span>
+          </div>
+          <input type="hidden" id="ratePace" />
+          <div class="field-error">請評分</div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field" id="f-rateTools" data-star="rateTools">
+          <label class="field-label">AI 工具（Claude / Replit）的上手難易度 <span class="required-mark">*</span></label>
+          <div class="star-rating">
+            <span class="star" data-value="1">★</span><span class="star" data-value="2">★</span><span class="star" data-value="3">★</span><span class="star" data-value="4">★</span><span class="star" data-value="5">★</span>
+            <span class="star-caption"></span>
+          </div>
+          <input type="hidden" id="rateTools" />
+          <div class="field-error">請評分</div>
+        </div>
+      </div>
+
+      <!-- 04 成果 -->
+      <div class="card">
+        <div class="card-title">04 &nbsp;你的成果</div>
+
+        <div class="field" id="f-doneGame">
+          <label class="field-label">這堂課你完成了自己的遊戲嗎？ <span class="required-mark">*</span></label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="doneGame" value="完成並拿到公開連結" /><span>完成了，而且拿到公開連結</span></label>
+            <label class="radio-item"><input type="radio" name="doneGame" value="大致完成" /><span>大致完成，還想再調整</span></label>
+            <label class="radio-item"><input type="radio" name="doneGame" value="做到一半" /><span>做到一半，還沒完成</span></label>
+            <label class="radio-item"><input type="radio" name="doneGame" value="沒有完成" /><span>沒有完成</span></label>
+          </div>
+          <div class="field-error">請選擇</div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field" id="f-donePortfolio">
+          <label class="field-label">你完成個人作品集網頁了嗎？ <span class="required-mark">*</span></label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="donePortfolio" value="完成" /><span>完成了</span></label>
+            <label class="radio-item"><input type="radio" name="donePortfolio" value="大致完成" /><span>大致完成，回家再補</span></label>
+            <label class="radio-item"><input type="radio" name="donePortfolio" value="沒有完成" /><span>沒有完成</span></label>
+          </div>
+          <div class="field-error">請選擇</div>
+        </div>
+      </div>
+
+      <!-- 05 開放回饋 -->
+      <div class="card">
+        <div class="card-title">05 &nbsp;告訴我們更多</div>
+
+        <div class="field" id="f-favorite">
+          <label class="field-label">最喜歡 / 最有收穫的環節 <span class="field-hint">（可複選）</span></label>
+          <div class="checkbox-group">
+            <label class="checkbox-item"><input type="checkbox" name="favorite" value="Vibe Coding 概念" /><span>開場・Vibe Coding 概念</span></label>
+            <label class="checkbox-item"><input type="checkbox" name="favorite" value="工具設置" /><span>工具設置（Claude / Replit）</span></label>
+            <label class="checkbox-item"><input type="checkbox" name="favorite" value="遊戲製作實戰" /><span>遊戲製作實戰</span></label>
+            <label class="checkbox-item"><input type="checkbox" name="favorite" value="成果記錄" /><span>成果記錄（截圖 / 錄影）</span></label>
+            <label class="checkbox-item"><input type="checkbox" name="favorite" value="作品集網頁製作" /><span>作品集網頁製作</span></label>
+            <label class="checkbox-item"><input type="checkbox" name="favorite" value="成果展示與 Q&A" /><span>成果展示・Q&amp;A・合照</span></label>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field">
+          <label class="field-label" for="gain">這堂課帶給你最大的收穫是什麼？ <span class="field-hint">（選填）</span></label>
+          <textarea id="gain" placeholder="例如：原來不會寫程式也能做出遊戲、學會怎麼跟 AI 下指令…"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="improve">有哪裡可以做得更好？ <span class="field-hint">（選填，越具體越好）</span></label>
+          <textarea id="improve" placeholder="例如：某段太趕、希望多一點實作時間、某個工具卡關…"></textarea>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field" id="f-advanced">
+          <label class="field-label">如果有「進階梯」你會想參加嗎？ <span class="required-mark">*</span></label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="advanced" value="一定參加" /><span>一定參加</span></label>
+            <label class="radio-item"><input type="radio" name="advanced" value="有興趣，想了解內容" /><span>有興趣，想先了解內容</span></label>
+            <label class="radio-item"><input type="radio" name="advanced" value="不確定" /><span>不確定</span></label>
+            <label class="radio-item"><input type="radio" name="advanced" value="暫時不會" /><span>暫時不會</span></label>
+          </div>
+          <div class="field-error">請選擇</div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field" id="f-share">
+          <label class="field-label">願意讓我們公開分享你的作品 / 心得嗎？ <span class="required-mark">*</span></label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="share" value="作品和心得都可以" /><span>作品和心得都可以公開</span></label>
+            <label class="radio-item"><input type="radio" name="share" value="只願意公開作品" /><span>只願意公開作品（不具名）</span></label>
+            <label class="radio-item"><input type="radio" name="share" value="先問過我" /><span>可以，但請先問過我</span></label>
+            <label class="radio-item"><input type="radio" name="share" value="不願意" /><span>暫時不願意</span></label>
+          </div>
+          <div class="field-error">請選擇</div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field">
+          <label class="field-label" for="message">還有什麼想對主辦團隊說的？ <span class="field-hint">（選填）</span></label>
+          <textarea id="message" placeholder="鼓勵、抱怨、許願、想加的功能…通通歡迎"></textarea>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn-submit" id="submit-btn">
+        <span class="spinner"></span>
+        <span class="btn-text">送出回饋</span>
+      </button>
+
+      <div id="error-banner"></div>
+
+    </form>
+  </div>
+
+  <footer><p>Vibe Coding Camp &copy; 千日教育 &nbsp;·&nbsp; 謝謝你讓我們做得更好</p></footer>
+</div>
+
+<script>
+  // ── 設定 ──────────────────────────────────────────
+  const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // ← 填入回饋表單的 Web App URL
+
+  // ── 星等評分 ───────────────────────────────────────
+  const STAR_CAPTIONS = { 1: '很不滿意', 2: '不太滿意', 3: '普通', 4: '滿意', 5: '非常滿意' };
+
+  document.querySelectorAll('.field[data-star]').forEach(field => {
+    const stars   = [...field.querySelectorAll('.star')];
+    const hidden  = field.querySelector('input[type="hidden"]');
+    const caption = field.querySelector('.star-caption');
+
+    function paint(value) {
+      stars.forEach(s => s.classList.toggle('active', +s.dataset.value <= value));
+    }
+    function showCaption(value) {
+      caption.textContent = STAR_CAPTIONS[value] || '';
+      caption.classList.toggle('show', !!value);
+    }
+
+    stars.forEach(star => {
+      const v = +star.dataset.value;
+      star.addEventListener('mouseenter', () => { paint(v); showCaption(v); });
+      star.addEventListener('click', () => {
+        hidden.value = v;
+        paint(v);
+        showCaption(v);
+        field.classList.remove('has-error');
+      });
+    });
+
+    field.querySelector('.star-rating').addEventListener('mouseleave', () => {
+      const set = +hidden.value || 0;
+      paint(set);
+      showCaption(set);
+    });
+  });
+
+  // ── 工具函式 ───────────────────────────────────────
+  const radio = n => (document.querySelector(`input[name="${n}"]:checked`) || {}).value || '';
+  const val   = id => (document.getElementById(id)?.value || '').trim();
+  const checkboxVals = n =>
+    [...document.querySelectorAll(`input[name="${n}"]:checked`)].map(c => c.value).join('、');
+
+  function setError(id, show) { document.getElementById(id)?.classList.toggle('has-error', show); }
+
+  function clearErrors() {
+    document.querySelectorAll('.field.has-error').forEach(f => f.classList.remove('has-error'));
+    document.getElementById('error-banner').classList.remove('visible');
+  }
+
+  function validate() {
+    let ok = true;
+    const email = val('email');
+    const rules = [
+      ['f-name',           !val('name')],
+      ['f-email',          !!email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)],
+      ['f-batch',          !val('batch')],
+      ['f-overall',        !val('overall')],
+      ['f-recommend',      !radio('recommend')],
+      ['f-rateContent',    !val('rateContent')],
+      ['f-rateInstructor', !val('rateInstructor')],
+      ['f-ratePace',       !val('ratePace')],
+      ['f-rateTools',      !val('rateTools')],
+      ['f-doneGame',       !radio('doneGame')],
+      ['f-donePortfolio',  !radio('donePortfolio')],
+      ['f-advanced',       !radio('advanced')],
+      ['f-share',          !radio('share')],
+    ];
+    rules.forEach(([id, bad]) => { setError(id, bad); if (bad) ok = false; });
+    return ok;
+  }
+
+  // ── Live error clear ───────────────────────────────
+  document.getElementById('feedback-form').addEventListener('input', e => {
+    e.target.closest('.field')?.classList.remove('has-error');
+  });
+  document.getElementById('feedback-form').addEventListener('change', e => {
+    e.target.closest('.field')?.classList.remove('has-error');
+  });
+
+  // ── Submit ─────────────────────────────────────────
+  document.getElementById('feedback-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    clearErrors();
+
+    if (!validate()) {
+      document.querySelector('.field.has-error')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const payload = {
+      name:           val('name'),
+      email:          val('email'),
+      batch:          val('batch'),
+      overall:        val('overall'),
+      recommend:      radio('recommend'),
+      rateContent:    val('rateContent'),
+      rateInstructor: val('rateInstructor'),
+      ratePace:       val('ratePace'),
+      rateTools:      val('rateTools'),
+      doneGame:       radio('doneGame'),
+      donePortfolio:  radio('donePortfolio'),
+      favorite:       checkboxVals('favorite'),
+      gain:           val('gain'),
+      improve:        val('improve'),
+      advanced:       radio('advanced'),
+      share:          radio('share'),
+      message:        val('message'),
+    };
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.querySelector('.btn-text').textContent = '送出中…';
+
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body:    JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      if (json.status !== 'success') throw new Error(json.message || '伺服器回傳錯誤');
+
+      document.getElementById('form-wrapper').classList.add('hidden');
+      document.getElementById('success-screen').classList.add('visible');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (err) {
+      const msg = err.message && err.message !== 'Failed to fetch'
+        ? `送出失敗：${err.message}`
+        : '網路連線異常，請確認網路後再試一次。若問題持續，請截圖聯絡主辦方。';
+
+      const banner = document.getElementById('error-banner');
+      banner.textContent = msg;
+      banner.classList.add('visible');
+      banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    } finally {
+      if (document.getElementById('form-wrapper').offsetParent !== null) {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        btn.querySelector('.btn-text').textContent = '重新送出';
+      }
+    }
+  });
+</script>
+</body>
+</html>
